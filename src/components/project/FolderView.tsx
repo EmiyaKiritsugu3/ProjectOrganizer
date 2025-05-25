@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { AppFolder } from "@/types";
@@ -16,8 +17,8 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
     return (
       <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
         <FolderOpen size={64} className="mb-4" />
-        <p className="text-xl">Select an app folder from the sidebar</p>
-        <p>to view its details and manage Git integration.</p>
+        <p className="text-xl">Selecione uma pasta de aplicativo na barra lateral</p>
+        <p>para ver seus detalhes e gerenciar a integração com Gist.</p>
       </div>
     );
   }
@@ -36,7 +37,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
             </div>
           </CardHeader>
           <CardContent className="pt-6">
-            <h3 className="text-xl font-semibold mb-2 text-foreground/90">Detailed Purpose</h3>
+            <h3 className="text-xl font-semibold mb-2 text-foreground/90">Propósito Detalhado</h3>
             <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">
               {folder.longDescription}
             </p>
@@ -46,7 +47,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
         <GitIntegrationCard folder={folder} onUpdateFolder={onUpdateFolder} />
         
         <div className="mt-8 text-center text-xs text-muted-foreground">
-          This interface helps organize and conceptualize your Dart projects. Actual coding and project setup will occur in your local development environment.
+          Esta interface ajuda a organizar e conceituar seus projetos. A codificação real e a configuração do projeto ocorrerão em seu ambiente de desenvolvimento local.
         </div>
       </div>
     </ScrollArea>

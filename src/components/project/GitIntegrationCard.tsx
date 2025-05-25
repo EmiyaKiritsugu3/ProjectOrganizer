@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { AppFolder } from "@/types";
@@ -7,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, GitBranch, Loader2, RefreshCw, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle2, GitBranch, Loader2, RefreshCw, XCircle, AlertTriangle, FileCode } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface GitIntegrationCardProps {
@@ -26,19 +27,19 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
   const handleSync = async () => {
     if (!repoUrl.trim()) {
       toast({
-        title: "Git Repository URL Missing",
-        description: "Please enter a Git repository URL to sync.",
+        title: "Gist URL Ausente",
+        description: "Por favor, insira uma URL de Gist para sincronizar.",
         variant: "destructive",
       });
       onUpdateFolder({ ...folder, gitSyncStatus: 'error' });
       return;
     }
 
-    // Simulate Git pull operation
+    // Simulate Gist pull operation
     onUpdateFolder({ ...folder, gitRepoUrl: repoUrl, gitSyncStatus: 'syncing' });
     toast({
-      title: "Syncing Repository...",
-      description: `Attempting to sync with ${repoUrl}. This is a simulation.`,
+      title: "Sincronizando Gist...",
+      description: `Tentando sincronizar com ${repoUrl}. Isto é uma simulação.`,
     });
 
     // Simulate network delay
@@ -49,15 +50,15 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
     if (success) {
       onUpdateFolder({ ...folder, gitRepoUrl: repoUrl, gitSyncStatus: 'synced', gitLastSync: new Date() });
       toast({
-        title: "Repository Synced",
-        description: `${folder.name} has been successfully synced with the Git repository.`,
+        title: "Gist Sincronizado",
+        description: `${folder.name} foi sincronizado com sucesso com o Gist.`,
         className: "bg-accent text-accent-foreground",
       });
     } else {
       onUpdateFolder({ ...folder, gitRepoUrl: repoUrl, gitSyncStatus: 'error' });
       toast({
-        title: "Sync Failed",
-        description: `Could not sync ${folder.name}. Please check the URL and try again.`,
+        title: "Falha na Sincronização",
+        description: `Não foi possível sincronizar ${folder.name}. Por favor, verifique a URL e tente novamente.`,
         variant: "destructive",
       });
     }
@@ -73,21 +74,21 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
         return <XCircle className="h-5 w-5 text-destructive" />;
       case 'unsynced':
       default:
-        return <GitBranch className="h-5 w-5 text-muted-foreground" />;
+        return <FileCode className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
   const getStatusText = () => {
     switch (folder.gitSyncStatus) {
       case 'syncing':
-        return "Syncing...";
+        return "Sincronizando...";
       case 'synced':
-        return `Synced successfully${folder.gitLastSync ? ` on ${folder.gitLastSync.toLocaleDateString()} at ${folder.gitLastSync.toLocaleTimeString()}` : ''}.`;
+        return `Sincronizado com sucesso${folder.gitLastSync ? ` em ${folder.gitLastSync.toLocaleDateString()} às ${folder.gitLastSync.toLocaleTimeString()}` : ''}.`;
       case 'error':
-        return "Sync failed. Please check URL or connection.";
+        return "Falha na sincronização. Por favor, verifique a URL ou conexão.";
       case 'unsynced':
       default:
-        return "Not synced yet.";
+        return "Ainda não sincronizado.";
     }
   };
   
@@ -104,22 +105,22 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
     <Card className="mt-6 shadow-lg">
       <CardHeader>
         <div className="flex items-center gap-2">
-          <GitBranch className="h-6 w-6 text-primary" />
-          <CardTitle>Git Integration</CardTitle>
+          <FileCode className="h-6 w-6 text-primary" />
+          <CardTitle>Integração com Gist</CardTitle>
         </div>
         <CardDescription>
-          Optionally link a Git repository to pull code for this app. This tool will never commit to your repository.
+          Opcionalmente, vincule uma URL de Gist para puxar o código para este app. Esta ferramenta nunca fará commit no seu Gist.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Label htmlFor={`git-repo-url-${folder.id}`} className="text-sm font-medium">
-            Git Repository URL
+          <Label htmlFor={`gist-url-${folder.id}`} className="text-sm font-medium">
+            URL do Gist
           </Label>
           <Input
-            id={`git-repo-url-${folder.id}`}
+            id={`gist-url-${folder.id}`}
             type="url"
-            placeholder="https://github.com/user/repo.git"
+            placeholder="https://gist.github.com/username/gist_id"
             value={repoUrl}
             onChange={(e) => setRepoUrl(e.target.value)}
             className="mt-1"
@@ -127,7 +128,7 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
            {!repoUrl.trim() && folder.gitSyncStatus !== 'unsynced' && folder.gitSyncStatus !== 'syncing' && (
              <p className="mt-2 text-xs text-destructive flex items-center gap-1">
                <AlertTriangle size={14} />
-               Repository URL is required for syncing.
+               A URL do Gist é obrigatória para sincronização.
              </p>
            )}
         </div>
@@ -137,7 +138,7 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
           ) : (
             <RefreshCw className="mr-2 h-4 w-4" />
           )}
-          {folder.gitSyncStatus === 'syncing' ? 'Syncing...' : 'Sync with Repository'}
+          {folder.gitSyncStatus === 'syncing' ? 'Sincronizando...' : 'Sincronizar com Gist'}
         </Button>
         <div className="flex items-center space-x-2 pt-2">
           {getStatusIcon()}
