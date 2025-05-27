@@ -95,10 +95,10 @@ export default function ProjectOrganizerLayout() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isClient]); // A dependência de initialFolders foi removida intencionalmente
+  }, [isClient]); 
 
   useEffect(() => {
-    if (isClient && folders.length > 0) { // Garante que só salva no localStorage após o carregamento inicial e se houver pastas
+    if (isClient && folders.length > 0) { 
       try {
         const dataToStore = folders.map(folder => ({
           id: folder.id,
@@ -107,7 +107,6 @@ export default function ProjectOrganizerLayout() {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToStore));
       } catch (error) {
         console.error("Failed to save folder data to localStorage:", error);
-        // Poderia adicionar um toast aqui se o salvamento falhar
       }
     }
   }, [folders, isClient]);
@@ -160,8 +159,6 @@ export default function ProjectOrganizerLayout() {
     }
     toast({ title: "Buscando Gists...", description: `Procurando Gists para o usuário ${githubUsername}.` });
     try {
-      // Simulação de chamada API: https://api.github.com/users/USERNAME/gists
-      // Em um app real, faria um fetch aqui.
       const response = await fetch(`https://api.github.com/users/${githubUsername}/gists`);
       if (!response.ok) {
         if (response.status === 404) {
@@ -172,20 +169,18 @@ export default function ProjectOrganizerLayout() {
       const userGists = await response.json();
 
       if (!Array.isArray(userGists)) {
-          // Isso pode acontecer se a resposta não for o que esperamos (ex: um objeto de erro em vez de um array)
           throw new Error("A resposta da API do GitHub não foi uma lista de Gists como esperado.");
       }
 
       let gistsFoundCount = 0;
       const updatedFolders = folders.map(folder => {
-        const recipeNumber = parseInt(folder.id, 10); // Ex: '01' -> 1
-        if (isNaN(recipeNumber)) return folder; // Se o ID não for um número, pula
+        const recipeNumber = parseInt(folder.id, 10); 
+        if (isNaN(recipeNumber)) return folder; 
 
-        // Padrões de busca mais flexíveis
-        const searchPattern1 = new RegExp(`POO_Receita_0*${recipeNumber}`, 'i'); // POO_Receita_01, POO_Receita_1
-        const searchPattern2 = new RegExp(`POO Receita 0*${recipeNumber}`, 'i'); // POO Receita 01, POO Receita 1
-        const searchPattern3 = new RegExp(`Receita_0*${recipeNumber}`, 'i'); // Receita_01, Receita_1
-        const searchPattern4 = new RegExp(`Receita 0*${recipeNumber}`, 'i'); // Receita 01, Receita 1
+        const searchPattern1 = new RegExp(`POO_Receita_0*${recipeNumber}`, 'i'); 
+        const searchPattern2 = new RegExp(`POO Receita 0*${recipeNumber}`, 'i'); 
+        const searchPattern3 = new RegExp(`Receita_0*${recipeNumber}`, 'i'); 
+        const searchPattern4 = new RegExp(`Receita 0*${recipeNumber}`, 'i'); 
 
 
         const foundGist = userGists.find(gist =>
@@ -203,7 +198,7 @@ export default function ProjectOrganizerLayout() {
         return folder;
       });
 
-      setFolders(updatedFolders); // Atualiza o estado com as novas URLs
+      setFolders(updatedFolders); 
       toast({
         title: "Busca de Gists Concluída",
         description: `${gistsFoundCount} Gist(s) encontrados e URLs correspondentes foram preenchidas. As alterações foram salvas localmente.`,
@@ -212,7 +207,7 @@ export default function ProjectOrganizerLayout() {
     } catch (error) {
       console.error("Erro ao buscar Gists:", error);
       let errorMessage = "Ocorreu um erro ao buscar os Gists.";
-      if (error instanceof Error) { // Verifica se é uma instância de Error para acessar message
+      if (error instanceof Error) { 
           errorMessage = error.message;
       }
       toast({
@@ -225,7 +220,6 @@ export default function ProjectOrganizerLayout() {
 
 
   if (!isClient) {
-    // Simple loading state to avoid flash of unstyled content or hydration errors
     return (
       <div className="flex items-center justify-center h-screen">
         <Rocket className="h-12 w-12 animate-pulse text-primary" />
@@ -262,13 +256,13 @@ export default function ProjectOrganizerLayout() {
                       value={githubUsername} 
                       onChange={(e) => setGithubUsername(e.target.value)} 
                       placeholder="Seu usuário GitHub"
-                      className="h-8 text-xs bg-sidebar-background border-sidebar-foreground/40 focus:ring-sidebar-ring text-sidebar-foreground placeholder:text-sidebar-foreground/60" 
+                      className="h-8 text-xs bg-sidebar-background border-sidebar-border text-sidebar-foreground text-opacity-100 placeholder:text-sidebar-foreground placeholder:opacity-75 focus:ring-sidebar-ring" 
                     />
                     <Button 
                       onClick={handleAutoFillGists} 
                       size="sm" 
                       variant="outline" 
-                      className="whitespace-nowrap text-xs px-2 py-1 h-8 border-sidebar-foreground/40 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:ring-sidebar-ring"
+                      className="whitespace-nowrap text-xs px-2 py-1 h-8 border-sidebar-border text-sidebar-foreground text-opacity-100 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:ring-sidebar-ring"
                     >
                       <Search className="mr-1 h-3 w-3" />
                       Buscar
@@ -282,7 +276,7 @@ export default function ProjectOrganizerLayout() {
                   onClick={handleSaveAllFoldersToJson} 
                   variant="outline" 
                   size="sm" 
-                  className="w-full text-xs px-2 py-1 h-8 border-sidebar-foreground/40 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:ring-sidebar-ring"
+                  className="w-full text-xs px-2 py-1 h-8 border-sidebar-border text-sidebar-foreground text-opacity-100 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:ring-sidebar-ring"
                 >
                   <Download className="mr-1 h-3 w-3" />
                   Salvar Config. em JSON
@@ -315,8 +309,6 @@ export default function ProjectOrganizerLayout() {
                {selectedFolder ? selectedFolder.name : "App Details"}
              </h2>
            </header>
-
-          {/* A seção de ferramentas foi movida para a Sidebar */}
 
           {selectedFolder ? (
             <FolderView 
