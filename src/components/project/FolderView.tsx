@@ -81,7 +81,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
                     allow="clipboard-write"
                   ></iframe>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Código executando automaticamente. Pode levar alguns segundos para carregar.
+                    Código executando automaticamente. Pode levar alguns segundos para carregar. A divisão é de 70% para o código e 30% para a saída.
                   </p>
                 </CardContent>
               </Card>
