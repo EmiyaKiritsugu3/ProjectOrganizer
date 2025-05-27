@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { extractGistId } from "@/lib/utils";
 import { FileCode, ExternalLink, AlertTriangle, PlayCircle, X } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 
 interface GitIntegrationCardProps {
   folder: AppFolder;
