@@ -96,7 +96,7 @@ export default function ProjectOrganizerLayout() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isClient]); // initialFolders intentionally removed, see PRD
+  }, [isClient]); 
 
   useEffect(() => {
     if (isClient && folders.length > 0) { 
@@ -262,7 +262,7 @@ export default function ProjectOrganizerLayout() {
                     <Button 
                       onClick={handleAutoFillGists} 
                       size="sm" 
-                      className="whitespace-nowrap text-xs px-2 py-1 h-8 border border-sidebar-primary text-sidebar-primary hover:bg-sidebar-primary hover:text-sidebar-primary-foreground focus:ring-sidebar-ring"
+                      className="whitespace-nowrap text-xs px-2 py-1 h-8 bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90 focus:ring-sidebar-ring"
                     >
                       <Search className="mr-1 h-3 w-3" />
                       Buscar
@@ -275,7 +275,7 @@ export default function ProjectOrganizerLayout() {
                 <Button 
                   onClick={handleSaveAllFoldersToJson} 
                   size="sm" 
-                  className="w-full text-xs px-2 py-1 h-8 border border-sidebar-primary text-sidebar-primary hover:bg-sidebar-primary hover:text-sidebar-primary-foreground focus:ring-sidebar-ring"
+                  className="w-full text-xs px-2 py-1 h-8 bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90 focus:ring-sidebar-ring"
                 >
                   <Download className="mr-1 h-3 w-3" />
                   Salvar Config. em JSON
@@ -326,4 +326,6 @@ export default function ProjectOrganizerLayout() {
     </SidebarProvider>
   );
 }
+    
+
     
