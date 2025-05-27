@@ -17,13 +17,24 @@ interface FolderViewProps {
 
 export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) {
   const [showEmbeddedDartPad, setShowEmbeddedDartPad] = useState(false);
+  const [isDartPadLoading, setIsDartPadLoading] = useState(false);
 
   const gistId = useMemo(() => extractGistId(folder.gitRepoUrl), [folder.gitRepoUrl]);
 
   const toggleEmbeddedDartPad = () => {
     if (gistId) {
-      setShowEmbeddedDartPad(!showEmbeddedDartPad);
+      const newShowState = !showEmbeddedDartPad;
+      setShowEmbeddedDartPad(newShowState);
+      if (newShowState) {
+        setIsDartPadLoading(true); // Start loading when showing
+      } else {
+        setIsDartPadLoading(false); // Reset loading state when hiding
+      }
     }
+  };
+
+  const handleDartPadLoad = () => {
+    setIsDartPadLoading(false); // Stop loading once iframe content is loaded
   };
 
   if (!folder) {
@@ -81,9 +92,12 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
                       style={{ border: 0 }} 
                       title={`DartPad Embutido para ${folder.name}`}
                       allow="clipboard-write"
+                      onLoad={handleDartPadLoad}
                     ></iframe>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">Tentando executar código automaticamente. Pode levar alguns segundos para carregar.</p>
+                  {isDartPadLoading && (
+                    <p className="text-xs text-muted-foreground mt-2">Tentando executar código automaticamente. Pode levar alguns segundos para carregar.</p>
+                  )}
                 </CardContent>
               </Card>
             )}
