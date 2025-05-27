@@ -12,23 +12,22 @@ import { useState, useMemo, useEffect } from "react";
 interface FolderViewProps {
   folder: AppFolder;
   onUpdateFolder: (updatedFolder: AppFolder) => void;
+  showEmbeddedDartPad: boolean;
+  onToggleEmbeddedDartPad: () => void;
 }
 
-export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) {
-  const [showEmbeddedDartPad, setShowEmbeddedDartPad] = useState(false);
-
+export default function FolderView({ folder, onUpdateFolder, showEmbeddedDartPad, onToggleEmbeddedDartPad }: FolderViewProps) {
   const gistId = useMemo(() => extractGistId(folder.gitRepoUrl), [folder.gitRepoUrl]);
 
-  // Reset showEmbeddedDartPad when folder changes
+  // Reset showEmbeddedDartPad when folder changes, but not if it's just a re-render due to gistId changing for the same folder
+  const [prevFolderId, setPrevFolderId] = useState<string | null>(null);
   useEffect(() => {
-    setShowEmbeddedDartPad(false);
-  }, [folder.id]);
-
-  const toggleEmbeddedDartPad = () => {
-    if (gistId) {
-      setShowEmbeddedDartPad(!showEmbeddedDartPad);
+    if (folder && folder.id !== prevFolderId) {
+      // onToggleEmbeddedDartPad(false); // This would make it `controlled` by parent for visibility
+      setPrevFolderId(folder.id);
     }
-  };
+  }, [folder, prevFolderId, onToggleEmbeddedDartPad]);
+
 
   if (!folder) {
     return (
@@ -40,7 +39,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
     );
   }
   
-  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-flutter.html?id=${gistId}&theme=dark&split=40&run=true&channel=beta` : "";
+  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-flutter.html?id=${gistId}&theme=dark&split=40&channel=beta&run=true` : "";
 
   return (
     <ScrollArea className="h-full p-2 md:p-6">
@@ -90,7 +89,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
           folder={folder} 
           onUpdateFolder={onUpdateFolder} 
           showEmbeddedDartPad={showEmbeddedDartPad}
-          onToggleEmbeddedDartPad={toggleEmbeddedDartPad}
+          onToggleEmbeddedDartPad={onToggleEmbeddedDartPad}
           gistIdForEmbed={gistId}
         />
         
