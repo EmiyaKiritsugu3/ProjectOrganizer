@@ -88,8 +88,8 @@ export default function GitIntegrationCard({
              </p>
            )}
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button 
+        <div className="flex flex-col sm:flex-row-reverse gap-2">
+           <Button 
             onClick={() => handleOpenInDartPad(repoUrl)} 
             disabled={!isValidGistInputForActions} 
             variant="outline" 
@@ -101,7 +101,7 @@ export default function GitIntegrationCard({
           <Button 
             onClick={onToggleEmbeddedDartPad} 
             disabled={!gistIdForEmbed} 
-            variant="outline" 
+            variant="default" // Alterado para default para cor primária (azul)
             className="w-full"
           >
             {showEmbeddedDartPad ? <X className="mr-2 h-4 w-4" /> : <PlayCircle className="mr-2 h-4 w-4" />}
