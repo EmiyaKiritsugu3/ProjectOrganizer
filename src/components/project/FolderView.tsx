@@ -36,7 +36,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
     );
   }
   
-  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-dart.html?id=${gistId}&run=true&theme=dark&split=70` : "";
+  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-dart.html?id=${gistId}&run=true&theme=dark` : "";
 
   return (
     <ScrollArea className="h-full p-2 md:p-6">
@@ -80,9 +80,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
                     title={`DartPad Embutido para ${folder.name}`}
                     allow="clipboard-write"
                   ></iframe>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Código executando automaticamente. Pode levar alguns segundos para carregar. A divisão é de 70% para o código e 30% para a saída.
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">Código executando automaticamente. Pode levar alguns segundos para carregar.</p>
                 </CardContent>
               </Card>
             )}
