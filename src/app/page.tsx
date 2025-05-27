@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import type { AppFolder } from '@/types';
 import { initialFolders } from '@/data/folders';
 import GitIntegrationCard from '@/components/project/GitIntegrationCard';
@@ -11,10 +11,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Download, Search, Rocket, FolderOpen } from 'lucide-react';
+import { Download, Search, Rocket, FolderOpen, ListX } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
-const LOCAL_STORAGE_KEY = 'projectOrganizerFolderData_v2'; // Changed key to avoid conflicts with old structure
+const LOCAL_STORAGE_KEY = 'projectOrganizerFolderData_v2';
 
 export default function Home() {
   const { toast } = useToast();
@@ -187,21 +187,29 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary/50 flex flex-col items-center p-4 md:p-8">
-      <header className="w-full max-w-5xl mb-8">
-        <Card className="shadow-lg">
-          <CardHeader>
+    <div className="min-h-screen bg-secondary/50 flex flex-col items-center p-4 md:p-6">
+      <header className="w-full max-w-4xl mb-6">
+        <Card className="shadow-md">
+          <CardHeader className="p-4 md:p-6">
             <div className="flex items-center gap-3">
-                <Rocket className="h-10 w-10 text-primary" />
-                <CardTitle className="text-3xl font-bold text-primary">Project Organizer - Receitas POO</CardTitle>
+                <Rocket className="h-8 w-8 text-primary" />
+                <CardTitle className="text-2xl font-bold text-primary">Project Organizer - Receitas POO</CardTitle>
             </div>
-            <CardDescription className="text-md">
+            <CardDescription className="text-sm mt-1">
               Gerencie e acesse seus Gists de receitas de Programação Orientada a Objetos com Dart.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+        </Card>
+      </header>
+
+      <section className="w-full max-w-4xl mb-6">
+        <Card className="shadow-sm">
+          <CardHeader className="p-4 md:p-6 pb-2">
+            <CardTitle className="text-lg font-semibold">Ferramentas de Gist</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 md:p-6 pt-2 space-y-3">
             <div>
-              <Label htmlFor="githubUser" className="text-sm font-medium">
+              <Label htmlFor="githubUser" className="text-xs font-medium text-muted-foreground">
                 Preencher Gists a partir do GitHub
               </Label>
               <div className="mt-1 flex items-stretch gap-2">
@@ -210,37 +218,38 @@ export default function Home() {
                   value={githubUsername}
                   onChange={(e) => setGithubUsername(e.target.value)}
                   placeholder="Seu nome de usuário do GitHub"
-                  className="h-10 text-base"
+                  className="h-9 text-sm"
                 />
                 <Button
                   onClick={handleAutoFillGists}
-                  size="lg"
-                  className="h-10"
+                  size="sm"
+                  className="h-9"
                 >
-                  <Search className="mr-2 h-5 w-5" />
+                  <Search className="mr-2 h-4 w-4" />
                   Buscar Gists
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Busca Gists públicos com descrições como "POO_Receita_01".
+                Ex: "POO_Receita_01", "POO Receita 1", etc.
               </p>
             </div>
             <Button
               onClick={handleSaveAllFoldersToJson}
               variant="outline"
-              className="w-full md:w-auto"
+              size="sm"
+              className="w-full md:w-auto h-9"
             >
               <Download className="mr-2 h-4 w-4" />
               Salvar Configuração Atual em JSON
             </Button>
           </CardContent>
         </Card>
-      </header>
+      </section>
 
-      <main className="w-full max-w-5xl">
+      <main className="w-full max-w-4xl">
         {folders.length > 0 ? (
-            <ScrollArea className="h-[calc(100vh-20rem)] pr-4"> {/* Adjust height as needed */}
-            <div className="space-y-4">
+          <ScrollArea className="h-[calc(100vh-24rem)] pr-3"> {/* Adjusted height */}
+            <div className="space-y-3">
               {folders.map(folder => (
                 <GitIntegrationCard
                   key={folder.id}
@@ -252,9 +261,9 @@ export default function Home() {
           </ScrollArea>
         ) : (
           <div className="flex flex-col items-center justify-center text-muted-foreground p-8 rounded-lg bg-card shadow">
-            <FolderOpen size={64} className="mb-4" />
-            <p className="text-xl">Nenhuma receita para exibir.</p>
-            <p>Verifique os dados iniciais ou tente buscar Gists do GitHub.</p>
+            <ListX size={48} className="mb-3" />
+            <p className="text-lg font-medium">Nenhuma receita para exibir.</p>
+            <p className="text-sm">Verifique os dados iniciais ou tente buscar Gists do GitHub.</p>
           </div>
         )}
       </main>
