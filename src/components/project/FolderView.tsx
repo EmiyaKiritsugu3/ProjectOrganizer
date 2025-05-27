@@ -42,8 +42,9 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
 
   return (
     <ScrollArea className="h-full p-2 md:p-6">
-      <div className="max-w-4xl mx-auto">
-        <Card className="shadow-xl overflow-hidden">
+      {/* Removido max-w-4xl mx-auto para permitir expansão */}
+      <div className=""> 
+        <Card className="shadow-xl overflow-hidden mb-6">
           <CardHeader className="bg-primary/10">
             <div className="flex items-center gap-3">
               <FolderOpen className="h-8 w-8 text-primary" />
@@ -80,7 +81,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
                     <iframe
                       src={dartPadEmbedUrl}
                       className="w-full h-full"
-                      style={{ border: 0 }} // iframe border is handled by parent div
+                      style={{ border: 0 }} 
                       title={`DartPad Embutido para ${folder.name}`}
                       allow="clipboard-write"
                     ></iframe>
