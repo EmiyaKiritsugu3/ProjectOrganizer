@@ -51,15 +51,15 @@ export default function GitIntegrationCard({
   const isValidGistInputForActions = !!extractGistId(repoUrl);
 
   return (
-    <Card className="w-full shadow-sm">
-      <CardHeader className="p-4 pb-2">
-        <CardTitle className="text-lg font-semibold">{folder.name}</CardTitle>
+    <Card className="w-full shadow-md hover:shadow-lg transition-shadow">
+      <CardHeader className="p-4">
+        <CardTitle className="text-xl font-semibold text-primary">{folder.name}</CardTitle>
       </CardHeader>
-      <CardContent className="p-4 pt-2">
-        <div className="space-y-2">
+      <CardContent className="p-4 pt-0">
+        <div className="space-y-3">
           <div>
-            <Label htmlFor={`gist-url-${folder.id}`} className="text-xs text-muted-foreground">
-              URL / ID do Gist
+            <Label htmlFor={`gist-url-${folder.id}`} className="text-sm font-medium text-foreground mb-1 block">
+              URL ou ID do Gist (Editável)
             </Label>
             <Input
               id={`gist-url-${folder.id}`}
@@ -67,7 +67,7 @@ export default function GitIntegrationCard({
               placeholder="Cole a URL do Gist, URL do DartPad ou apenas o ID"
               value={repoUrl}
               onChange={(e) => handleUrlChange(e.target.value)}
-              className="h-9 text-sm"
+              className="w-full"
             />
             {!isValidGistInputForActions && repoUrl.trim() !== "" && (
                <p className="pt-1 text-xs text-destructive flex items-center gap-1">
@@ -80,15 +80,14 @@ export default function GitIntegrationCard({
               onClick={() => handleOpenInDartPad(repoUrl)} 
               disabled={!isValidGistInputForActions} 
               variant="outline"
-              size="sm"
-              className="w-full h-9"
+              className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
             >
               <ExternalLink className="mr-2 h-4 w-4" />
               Abrir Gist no DartPad (Nova Aba)
           </Button>
         </div>
         {folder.description && (
-            <CardDescription className="text-xs text-muted-foreground mt-2">
+            <CardDescription className="text-sm text-muted-foreground mt-3">
                 {folder.description}
             </CardDescription>
         )}

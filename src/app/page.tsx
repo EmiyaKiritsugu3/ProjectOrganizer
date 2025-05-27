@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Download, Search, Rocket, FolderOpen, ListX } from 'lucide-react';
+import { Download, Search, Rocket, ListX } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 const LOCAL_STORAGE_KEY = 'projectOrganizerFolderData_v2';
@@ -187,69 +187,61 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary/50 flex flex-col items-center p-4 md:p-6">
-      <header className="w-full max-w-4xl mb-6">
-        <Card className="shadow-md">
-          <CardHeader className="p-4 md:p-6">
-            <div className="flex items-center gap-3">
-                <Rocket className="h-8 w-8 text-primary" />
-                <CardTitle className="text-2xl font-bold text-primary">Project Organizer - Receitas POO</CardTitle>
+    <div className="min-h-screen bg-background flex flex-col items-center p-6">
+      <header className="w-full max-w-4xl mb-8">
+        <div className="flex items-center gap-4">
+            <Rocket className="h-10 w-10 text-primary" />
+            <div>
+                <h1 className="text-3xl font-bold text-primary">Project Organizer - Receitas POO</h1>
+                <p className="text-md text-muted-foreground">
+                Gerencie e acesse seus Gists de receitas de Programação Orientada a Objetos com Dart.
+                </p>
             </div>
-            <CardDescription className="text-sm mt-1">
-              Gerencie e acesse seus Gists de receitas de Programação Orientada a Objetos com Dart.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        </div>
       </header>
 
-      <section className="w-full max-w-4xl mb-6">
-        <Card className="shadow-sm">
-          <CardHeader className="p-4 md:p-6 pb-2">
-            <CardTitle className="text-lg font-semibold">Ferramentas de Gist</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 md:p-6 pt-2 space-y-3">
-            <div>
-              <Label htmlFor="githubUser" className="text-xs font-medium text-muted-foreground">
-                Preencher Gists a partir do GitHub
-              </Label>
-              <div className="mt-1 flex items-stretch gap-2">
-                <Input
-                  id="githubUser"
-                  value={githubUsername}
-                  onChange={(e) => setGithubUsername(e.target.value)}
-                  placeholder="Seu nome de usuário do GitHub"
-                  className="h-9 text-sm"
-                />
-                <Button
-                  onClick={handleAutoFillGists}
-                  size="sm"
-                  className="h-9"
-                >
-                  <Search className="mr-2 h-4 w-4" />
-                  Buscar Gists
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Ex: "POO_Receita_01", "POO Receita 1", etc.
-              </p>
+      <section className="w-full max-w-4xl mb-6 p-6 bg-card rounded-lg shadow-md">
+        <h2 className="text-xl font-semibold mb-3 text-primary">Ferramentas de Gist</h2>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="githubUser" className="block text-sm font-medium text-foreground mb-1">
+              Preencher Gists a partir do GitHub
+            </Label>
+            <div className="flex items-stretch gap-2">
+              <Input
+                id="githubUser"
+                value={githubUsername}
+                onChange={(e) => setGithubUsername(e.target.value)}
+                placeholder="Seu nome de usuário do GitHub"
+                className="flex-grow"
+              />
+              <Button
+                onClick={handleAutoFillGists}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                <Search className="mr-2 h-4 w-4" />
+                Buscar Gists
+              </Button>
             </div>
-            <Button
-              onClick={handleSaveAllFoldersToJson}
-              variant="outline"
-              size="sm"
-              className="w-full md:w-auto h-9"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Salvar Configuração Atual em JSON
-            </Button>
-          </CardContent>
-        </Card>
+            <p className="text-xs text-muted-foreground mt-1">
+              Seus Gists devem ter descrições como "POO_Receita_01", "POO Receita 1", etc.
+            </p>
+          </div>
+          <Button
+            onClick={handleSaveAllFoldersToJson}
+            variant="outline"
+            className="w-full"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Salvar Configuração Atual em JSON
+          </Button>
+        </div>
       </section>
 
       <main className="w-full max-w-4xl">
         {folders.length > 0 ? (
-          <ScrollArea className="h-[calc(100vh-24rem)] pr-3"> {/* Adjusted height */}
-            <div className="space-y-3">
+          <ScrollArea className="h-[calc(100vh-28rem)] pr-4"> {/* Adjust height as needed */}
+            <div className="space-y-4">
               {folders.map(folder => (
                 <GitIntegrationCard
                   key={folder.id}
@@ -260,9 +252,9 @@ export default function Home() {
             </div>
           </ScrollArea>
         ) : (
-          <div className="flex flex-col items-center justify-center text-muted-foreground p-8 rounded-lg bg-card shadow">
-            <ListX size={48} className="mb-3" />
-            <p className="text-lg font-medium">Nenhuma receita para exibir.</p>
+          <div className="flex flex-col items-center justify-center text-muted-foreground p-10 rounded-lg bg-card shadow-lg">
+            <ListX size={64} className="mb-4" />
+            <p className="text-xl font-medium">Nenhuma receita para exibir.</p>
             <p className="text-sm">Verifique os dados iniciais ou tente buscar Gists do GitHub.</p>
           </div>
         )}
