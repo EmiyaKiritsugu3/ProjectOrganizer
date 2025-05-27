@@ -36,8 +36,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
     );
   }
   
-  // Simplificando a URL para testar o run=true
-  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-flutter.html?id=${gistId}&run=true` : "";
+  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-flutter.html?run=true&id=${gistId}&theme=dark&split=40` : "";
 
   return (
     <ScrollArea className="h-full p-2 md:p-6">
