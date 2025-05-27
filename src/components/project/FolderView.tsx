@@ -36,13 +36,11 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
     );
   }
   
-  // Use embed-flutter.html for Flutter Gists to get side-by-side code and UI.
-  // split=40 means code takes 40%, UI takes 60%.
-  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-flutter.html?id=${gistId}&run=true&theme=dark&split=40` : "";
+  // Simplificando a URL para testar o run=true
+  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-flutter.html?id=${gistId}&run=true` : "";
 
   return (
     <ScrollArea className="h-full p-2 md:p-6">
-      {/* Removido max-w-4xl mx-auto para permitir expansão */}
       <div className=""> 
         <Card className="shadow-xl overflow-hidden mb-6">
           <CardHeader className="bg-primary/10">
@@ -86,7 +84,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
                       allow="clipboard-write"
                     ></iframe>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">Código executando automaticamente. Pode levar alguns segundos para carregar.</p>
+                  <p className="text-xs text-muted-foreground mt-2">Tentando executar código automaticamente. Pode levar alguns segundos para carregar.</p>
                 </CardContent>
               </Card>
             )}
