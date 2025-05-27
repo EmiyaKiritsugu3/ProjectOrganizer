@@ -1,3 +1,4 @@
+
 export type GitSyncStatus = 'unsynced' | 'syncing' | 'synced' | 'error';
 
 export interface AppFolder {
@@ -6,6 +7,6 @@ export interface AppFolder {
   description: string;
   longDescription: string;
   gitRepoUrl: string;
-  gitLastSync?: Date;
-  gitSyncStatus: GitSyncStatus;
+  // gitLastSync?: Date; // Removido
+  // gitSyncStatus: GitSyncStatus; // Removido
 }

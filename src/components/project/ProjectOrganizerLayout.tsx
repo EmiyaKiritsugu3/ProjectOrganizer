@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -15,8 +16,7 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Folder, Rocket } from 'lucide-react';
-import { Button } from '@/components/ui/button'; // For potential header trigger
+import { Folder, FolderOpen, Rocket } from 'lucide-react'; // Adicionado FolderOpen
 
 export default function ProjectOrganizerLayout() {
   const [folders, setFolders] = useState<AppFolder[]>(initialFolders);
@@ -25,7 +25,6 @@ export default function ProjectOrganizerLayout() {
 
   useEffect(() => {
     setIsClient(true);
-    // Select the first folder by default if not already selected
     if (initialFolders.length > 0 && !selectedFolderId) {
       setSelectedFolderId(initialFolders[0].id);
     }
@@ -36,9 +35,9 @@ export default function ProjectOrganizerLayout() {
     setSelectedFolderId(folderId);
   };
 
-  const handleUpdateFolder = (updatedFolder: AppFolder) => {
+  const handleUpdateFolder = (updatedFolderData: Pick<AppFolder, 'id' | 'gitRepoUrl'>) => {
     setFolders(prevFolders =>
-      prevFolders.map(f => (f.id === updatedFolder.id ? updatedFolder : f))
+      prevFolders.map(f => (f.id === updatedFolderData.id ? { ...f, gitRepoUrl: updatedFolderData.gitRepoUrl } : f))
     );
   };
 
@@ -47,7 +46,6 @@ export default function ProjectOrganizerLayout() {
   }, [folders, selectedFolderId]);
 
   if (!isClient) {
-    // Render a loading state or null during SSR/ första client render to avoid hydration mismatch related to sidebar
     return (
       <div className="flex items-center justify-center h-screen">
         <Rocket className="h-12 w-12 animate-pulse text-primary" /> 
@@ -88,7 +86,6 @@ export default function ProjectOrganizerLayout() {
         </Sidebar>
         
         <SidebarInset className="flex-1 overflow-y-auto">
-           {/* Optional: Header for the main content area with a toggle button */}
            <header className="sticky top-0 z-10 flex items-center h-14 px-4 border-b bg-background/95 backdrop-blur-sm md:hidden">
              <SidebarTrigger className="mr-2" />
              <h2 className="text-lg font-semibold">
