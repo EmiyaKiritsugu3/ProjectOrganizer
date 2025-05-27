@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import GitIntegrationCard from "./GitIntegrationCard";
 import { Button } from "@/components/ui/button";
 import { extractGistId } from "@/lib/utils";
-import { FolderOpen, Eye, Code, PlayCircle, X } from "lucide-react";
+import { FolderOpen, Code, PlayCircle, X } from "lucide-react";
 import { useState, useMemo } from "react";
 
 interface FolderViewProps {
@@ -36,7 +36,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
     );
   }
   
-  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-dart.html?id=${gistId}&run=true&theme=dark` : "";
+  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-dart.html?id=${gistId}&run=true&theme=dark&split=40` : "";
 
   return (
     <ScrollArea className="h-full p-2 md:p-6">
