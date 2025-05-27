@@ -36,7 +36,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
     );
   }
   
-  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/?id=${gistId}&embed=true&run=true` : "";
+  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/${gistId}?embed=true&run=true` : "";
 
   return (
     <ScrollArea className="h-full p-2 md:p-6">
