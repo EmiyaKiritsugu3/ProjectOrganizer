@@ -36,7 +36,9 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
     );
   }
   
-  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-dart.html?id=${gistId}&run=true&theme=dark&split=40` : "";
+  // Use embed-flutter.html for Flutter Gists to get side-by-side code and UI.
+  // split=40 means code takes 40%, UI takes 60%.
+  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-flutter.html?id=${gistId}&run=true&theme=dark&split=40` : "";
 
   return (
     <ScrollArea className="h-full p-2 md:p-6">
@@ -74,12 +76,15 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <iframe
-                    src={dartPadEmbedUrl}
-                    style={{ width: '100%', height: '600px', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)' }}
-                    title={`DartPad Embutido para ${folder.name}`}
-                    allow="clipboard-write"
-                  ></iframe>
+                  <div className="aspect-video w-full overflow-hidden rounded-md border border-border bg-muted">
+                    <iframe
+                      src={dartPadEmbedUrl}
+                      className="w-full h-full"
+                      style={{ border: 0 }} // iframe border is handled by parent div
+                      title={`DartPad Embutido para ${folder.name}`}
+                      allow="clipboard-write"
+                    ></iframe>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-2">Código executando automaticamente. Pode levar alguns segundos para carregar.</p>
                 </CardContent>
               </Card>
