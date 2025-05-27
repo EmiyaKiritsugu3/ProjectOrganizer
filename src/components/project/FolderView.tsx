@@ -6,15 +6,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import GitIntegrationCard from "./GitIntegrationCard";
 import { extractGistId } from "@/lib/utils";
-import { FolderOpen, Code } from "lucide-react"; // Removido PlayCircle, X
+import { FolderOpen, Code } from "lucide-react";
 import { useState, useMemo } from "react";
 
 interface FolderViewProps {
   folder: AppFolder;
   onUpdateFolder: (updatedFolder: AppFolder) => void;
+  onSaveAllFoldersToJson: () => void;
 }
 
-export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) {
+export default function FolderView({ folder, onUpdateFolder, onSaveAllFoldersToJson }: FolderViewProps) {
   const [showEmbeddedDartPad, setShowEmbeddedDartPad] = useState(false);
 
   const gistId = useMemo(() => extractGistId(folder.gitRepoUrl), [folder.gitRepoUrl]);
@@ -56,8 +57,6 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
               {folder.longDescription}
             </p>
 
-            {/* O botão foi movido para GitIntegrationCard */}
-
             {showEmbeddedDartPad && gistId && (
               <Card className="mb-6 shadow-md overflow-hidden">
                 <CardHeader>
@@ -88,6 +87,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
           showEmbeddedDartPad={showEmbeddedDartPad}
           onToggleEmbeddedDartPad={toggleEmbeddedDartPad}
           gistIdForEmbed={gistId}
+          onSaveAllFoldersToJson={onSaveAllFoldersToJson}
         />
         
         <div className="mt-8 text-center text-xs text-muted-foreground">

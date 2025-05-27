@@ -22,8 +22,7 @@ const LOCAL_STORAGE_KEY = 'projectOrganizerFolderData';
 
 export default function ProjectOrganizerLayout() {
   const [folders, setFolders] = useState<AppFolder[]>(() => {
-    // Initialize with initialFolders, will be overridden by localStorage logic client-side
-    return initialFolders.map(f => ({ ...f })); // Return a copy
+    return initialFolders.map(f => ({ ...f })); 
   });
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
@@ -32,53 +31,42 @@ export default function ProjectOrganizerLayout() {
     setIsClient(true);
   }, []);
 
-  // Load folders from localStorage on initial client-side mount,
-  // merging with initialFolders from code.
   useEffect(() => {
     if (isClient) {
       let processedFolders: AppFolder[];
       try {
         const storedFolderDataString = localStorage.getItem(LOCAL_STORAGE_KEY);
-        
-        // Start with a fresh copy of initialFolders from the code
         const codeFolders = initialFolders.map(f => ({ ...f }));
 
         if (storedFolderDataString) {
-          const storedFolderData: Array<{ id: string; gitRepoUrl: string }> = JSON.parse(storedFolderDataString);
-          const storedUrlsMap = new Map(storedFolderData.map(item => [item.id, item.gitRepoUrl]));
+          const storedFolderUrls: Array<{ id: string; gitRepoUrl: string }> = JSON.parse(storedFolderDataString);
+          const storedUrlsMap = new Map(storedFolderUrls.map(item => [item.id, item.gitRepoUrl]));
 
           processedFolders = codeFolders.map(codeFolder => {
-            const urlFromStorage = storedUrlsMap.get(codeFolder.id);
-            let finalUrl = codeFolder.gitRepoUrl; // Default to URL from code
-
-            // If the URL in the code is empty, AND localStorage has a URL for this folder,
-            // then use the URL from localStorage.
-            // Otherwise, the URL from the code (even if empty or different) takes precedence.
-            if (!codeFolder.gitRepoUrl && urlFromStorage !== undefined) {
-              finalUrl = urlFromStorage;
+            // Se a URL no código (initialFolders.ts) NÃO estiver vazia, ela tem precedência.
+            if (codeFolder.gitRepoUrl && codeFolder.gitRepoUrl.trim() !== "") {
+              return { ...codeFolder };
             }
-
+            // Se a URL no código ESTIVER vazia, usar a do localStorage, se existir.
+            const urlFromStorage = storedUrlsMap.get(codeFolder.id);
             return {
               ...codeFolder,
-              gitRepoUrl: finalUrl,
+              gitRepoUrl: urlFromStorage !== undefined ? urlFromStorage : codeFolder.gitRepoUrl, // Mantém a do código (vazia) se não houver no storage
             };
           });
         } else {
-          // No stored data, use folders from code directly
           processedFolders = codeFolders;
         }
 
         setFolders(processedFolders);
 
-        // Save the merged/processed folders back to localStorage.
-        // This ensures localStorage is consistent with the applied logic.
-        const dataToStore = processedFolders.map(folder => ({
+        // Salva o estado processado de volta no localStorage
+        const dataToStoreForLocalStorage = processedFolders.map(folder => ({
           id: folder.id,
           gitRepoUrl: folder.gitRepoUrl,
         }));
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToStore));
-
-        // Ensure a folder is selected
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToStoreForLocalStorage));
+        
         if (processedFolders.length > 0) {
           if (!selectedFolderId || !processedFolders.find(f => f.id === selectedFolderId)) {
             setSelectedFolderId(processedFolders[0].id);
@@ -89,10 +77,9 @@ export default function ProjectOrganizerLayout() {
 
       } catch (error) {
         console.error("Failed to load or merge folder data:", error);
-        // Fallback to initialFolders from code if any error occurs
         const fallbackFolders = initialFolders.map(f => ({ ...f }));
         setFolders(fallbackFolders);
-        if (fallbackFolders.length > 0 && !selectedFolderId) {
+        if (fallbackFolders.length > 0 && (!selectedFolderId || !fallbackFolders.find(f => f.id === selectedFolderId))) {
             setSelectedFolderId(fallbackFolders[0].id);
         } else if (fallbackFolders.length === 0) {
             setSelectedFolderId(null);
@@ -100,11 +87,10 @@ export default function ProjectOrganizerLayout() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isClient]); // Only run on client mount; selectedFolderId is handled inside.
+  }, [isClient]); 
 
-  // Save current folders state to localStorage whenever it changes by user interaction
   useEffect(() => {
-    if (isClient && folders.length > 0) { // Only save if folders have been initialized and processed
+    if (isClient && folders.length > 0) { 
       try {
         const dataToStore = folders.map(folder => ({
           id: folder.id,
@@ -132,6 +118,28 @@ export default function ProjectOrganizerLayout() {
     return folders.find(f => f.id === selectedFolderId) || null;
   }, [folders, selectedFolderId]);
 
+  const handleSaveAllFoldersToJson = () => {
+    if (!isClient) return;
+
+    const dataToSave = folders.map(f => ({ 
+      id: f.id, 
+      name: f.name, 
+      description: f.description, 
+      longDescription: f.longDescription, 
+      gitRepoUrl: f.gitRepoUrl 
+    }));
+    const jsonString = JSON.stringify(dataToSave, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'gist_recipes_backup.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
 
   if (!isClient) {
     return (
@@ -156,7 +164,7 @@ export default function ProjectOrganizerLayout() {
           </SidebarHeader>
           <SidebarContent className="p-2">
             <SidebarMenu>
-              {folders.map(folder => ( // Use 'folders' state which is now correctly initialized
+              {folders.map(folder => ( 
                 <SidebarMenuItem key={folder.id}>
                   <SidebarMenuButton
                     onClick={() => handleSelectFolder(folder.id)}
@@ -181,7 +189,11 @@ export default function ProjectOrganizerLayout() {
              </h2>
            </header>
           {selectedFolder ? (
-            <FolderView folder={selectedFolder} onUpdateFolder={handleUpdateFolder} />
+            <FolderView 
+              folder={selectedFolder} 
+              onUpdateFolder={handleUpdateFolder}
+              onSaveAllFoldersToJson={handleSaveAllFoldersToJson} 
+            />
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4 text-center">
               <FolderOpen size={48} className="mb-4" />
@@ -194,5 +206,3 @@ export default function ProjectOrganizerLayout() {
     </SidebarProvider>
   );
 }
-
-    
