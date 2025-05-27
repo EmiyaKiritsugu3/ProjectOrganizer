@@ -50,11 +50,9 @@ export default function ProjectOrganizerLayout() {
           const storedUrlsMap = new Map(storedFolderUrls.map(item => [item.id, item.gitRepoUrl]));
 
           processedFolders = codeFolders.map(codeFolder => {
-            // Se a URL no código não estiver vazia, ela tem precedência.
             if (codeFolder.gitRepoUrl && codeFolder.gitRepoUrl.trim() !== "") {
               return { ...codeFolder };
             }
-            // Caso contrário, tenta pegar do localStorage. Se não existir lá, mantém a do código (que seria vazia).
             const urlFromStorage = storedUrlsMap.get(codeFolder.id);
             return {
               ...codeFolder,
@@ -67,7 +65,6 @@ export default function ProjectOrganizerLayout() {
 
         setFolders(processedFolders);
 
-        // Salva de volta no localStorage o estado mesclado/processado para manter a consistência
         const dataToStoreForLocalStorage = processedFolders.map(folder => ({
           id: folder.id,
           gitRepoUrl: folder.gitRepoUrl,
@@ -84,7 +81,6 @@ export default function ProjectOrganizerLayout() {
 
       } catch (error) {
         console.error("Failed to load or merge folder data:", error);
-        // Fallback para os dados do código em caso de erro
         const fallbackFolders = initialFolders.map(f => ({ ...f }));
         setFolders(fallbackFolders);
         if (fallbackFolders.length > 0 && (!selectedFolderId || !fallbackFolders.find(f => f.id === selectedFolderId))) {
@@ -256,13 +252,12 @@ export default function ProjectOrganizerLayout() {
                       value={githubUsername} 
                       onChange={(e) => setGithubUsername(e.target.value)} 
                       placeholder="Seu usuário GitHub"
-                      className="h-8 text-xs bg-sidebar-background border-sidebar-border text-sidebar-foreground text-opacity-100 placeholder:text-sidebar-foreground placeholder:opacity-75 focus:ring-sidebar-ring" 
+                      className="h-8 text-xs bg-sidebar-border border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground/70 focus:ring-sidebar-ring" 
                     />
                     <Button 
                       onClick={handleAutoFillGists} 
                       size="sm" 
-                      variant="outline" 
-                      className="whitespace-nowrap text-xs px-2 py-1 h-8 border-sidebar-border text-sidebar-foreground text-opacity-100 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:ring-sidebar-ring"
+                      className="whitespace-nowrap text-xs px-2 py-1 h-8 border border-sidebar-primary text-sidebar-primary hover:bg-sidebar-primary hover:text-sidebar-primary-foreground focus:ring-sidebar-ring"
                     >
                       <Search className="mr-1 h-3 w-3" />
                       Buscar
@@ -274,9 +269,8 @@ export default function ProjectOrganizerLayout() {
                 </div>
                 <Button 
                   onClick={handleSaveAllFoldersToJson} 
-                  variant="outline" 
                   size="sm" 
-                  className="w-full text-xs px-2 py-1 h-8 border-sidebar-border text-sidebar-foreground text-opacity-100 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:ring-sidebar-ring"
+                  className="w-full text-xs px-2 py-1 h-8 border border-sidebar-primary text-sidebar-primary hover:bg-sidebar-primary hover:text-sidebar-primary-foreground focus:ring-sidebar-ring"
                 >
                   <Download className="mr-1 h-3 w-3" />
                   Salvar Config. em JSON
