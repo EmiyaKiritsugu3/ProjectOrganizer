@@ -8,15 +8,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { extractGistId } from "@/lib/utils";
-import { FileCode, ExternalLink, AlertTriangle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { FileCode, ExternalLink, AlertTriangle, PlayCircle, X } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 
 interface GitIntegrationCardProps {
   folder: AppFolder;
   onUpdateFolder: (updatedFolder: Pick<AppFolder, 'id' | 'gitRepoUrl'>) => void;
+  showEmbeddedDartPad: boolean;
+  onToggleEmbeddedDartPad: () => void;
+  gistIdForEmbed: string | null;
 }
 
-export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegrationCardProps) {
+export default function GitIntegrationCard({ 
+  folder, 
+  onUpdateFolder,
+  showEmbeddedDartPad,
+  onToggleEmbeddedDartPad,
+  gistIdForEmbed
+}: GitIntegrationCardProps) {
   const { toast } = useToast();
   const [repoUrl, setRepoUrl] = useState(folder.gitRepoUrl);
 
@@ -89,9 +98,18 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
             <ExternalLink className="mr-2 h-4 w-4" />
             Abrir Gist no DartPad (Nova Aba)
           </Button>
+          <Button 
+            onClick={onToggleEmbeddedDartPad} 
+            disabled={!gistIdForEmbed} 
+            variant="outline" 
+            className="w-full"
+          >
+            {showEmbeddedDartPad ? <X className="mr-2 h-4 w-4" /> : <PlayCircle className="mr-2 h-4 w-4" />}
+            {showEmbeddedDartPad ? "Fechar DartPad Embutido" : "Visualizar e Executar no DartPad Embutido"}
+          </Button>
         </div>
          <p className="text-xs text-muted-foreground pt-2">
-            O DartPad sempre carrega a versão mais recente do Gist. A visualização embutida está disponível na seção acima.
+            O DartPad sempre carrega a versão mais recente do Gist. A visualização embutida aparecerá abaixo dos detalhes do projeto quando ativada.
         </p>
       </CardContent>
     </Card>

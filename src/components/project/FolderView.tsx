@@ -5,9 +5,8 @@ import type { AppFolder } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import GitIntegrationCard from "./GitIntegrationCard";
-import { Button } from "@/components/ui/button";
 import { extractGistId } from "@/lib/utils";
-import { FolderOpen, Code, PlayCircle, X } from "lucide-react";
+import { FolderOpen, Code } from "lucide-react"; // Removido PlayCircle, X
 import { useState, useMemo } from "react";
 
 interface FolderViewProps {
@@ -57,14 +56,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
               {folder.longDescription}
             </p>
 
-            {gistId && (
-              <div className="mb-6">
-                <Button onClick={toggleEmbeddedDartPad} variant="outline" className="w-full sm:w-auto">
-                  {showEmbeddedDartPad ? <X className="mr-2 h-4 w-4" /> : <PlayCircle className="mr-2 h-4 w-4" />}
-                  {showEmbeddedDartPad ? "Fechar DartPad Embutido" : "Visualizar e Executar no DartPad Embutido"}
-                </Button>
-              </div>
-            )}
+            {/* O botão foi movido para GitIntegrationCard */}
 
             {showEmbeddedDartPad && gistId && (
               <Card className="mb-6 shadow-md overflow-hidden">
@@ -90,7 +82,13 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
           </CardContent>
         </Card>
 
-        <GitIntegrationCard folder={folder} onUpdateFolder={onUpdateFolder} />
+        <GitIntegrationCard 
+          folder={folder} 
+          onUpdateFolder={onUpdateFolder} 
+          showEmbeddedDartPad={showEmbeddedDartPad}
+          onToggleEmbeddedDartPad={toggleEmbeddedDartPad}
+          gistIdForEmbed={gistId}
+        />
         
         <div className="mt-8 text-center text-xs text-muted-foreground">
           Esta interface ajuda a organizar e conceituar seus projetos. A codificação real e a configuração do projeto ocorrerão em seu ambiente de desenvolvimento local.
