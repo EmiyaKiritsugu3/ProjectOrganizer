@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, GitBranch, Loader2, RefreshCw, XCircle, AlertTriangle, FileCode } from "lucide-react";
+import { CheckCircle2, GitBranch, Loader2, RefreshCw, XCircle, AlertTriangle, FileCode, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface GitIntegrationCardProps {
@@ -27,7 +27,7 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
   const handleSync = async () => {
     if (!repoUrl.trim()) {
       toast({
-        title: "Gist URL Ausente",
+        title: "URL do Gist Ausente",
         description: "Por favor, insira uma URL de Gist para sincronizar.",
         variant: "destructive",
       });
@@ -35,18 +35,15 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
       return;
     }
 
-    // Simulate Gist pull operation
     onUpdateFolder({ ...folder, gitRepoUrl: repoUrl, gitSyncStatus: 'syncing' });
     toast({
       title: "Sincronizando Gist...",
       description: `Tentando sincronizar com ${repoUrl}. Isto é uma simulação.`,
     });
 
-    // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
 
-    // Simulate success or failure
-    const success = Math.random() > 0.3; // 70% chance of success
+    const success = Math.random() > 0.3; 
     if (success) {
       onUpdateFolder({ ...folder, gitRepoUrl: repoUrl, gitSyncStatus: 'synced', gitLastSync: new Date() });
       toast({
@@ -59,6 +56,49 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
       toast({
         title: "Falha na Sincronização",
         description: `Não foi possível sincronizar ${folder.name}. Por favor, verifique a URL e tente novamente.`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleOpenInDartPad = (gistUrl: string) => {
+    if (!gistUrl.trim()) {
+      toast({
+        title: "URL do Gist Ausente",
+        description: "Por favor, insira uma URL de Gist para abrir no DartPad.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const url = new URL(gistUrl);
+      if (url.hostname !== 'gist.github.com') {
+        toast({
+          title: "URL Inválida",
+          description: "Por favor, insira uma URL válida do Gist (gist.github.com).",
+          variant: "destructive",
+        });
+        return;
+      }
+      const pathParts = url.pathname.split('/');
+      const gistId = pathParts.pop(); 
+
+      if (!gistId) {
+        toast({
+          title: "ID do Gist Não Encontrado",
+          description: "Não foi possível extrair o ID do Gist da URL.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const dartPadUrl = `https://dartpad.dev/?id=${gistId}`;
+      window.open(dartPadUrl, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      toast({
+        title: "Erro ao Processar URL",
+        description: "A URL do Gist fornecida parece ser inválida. Verifique o formato.",
         variant: "destructive",
       });
     }
@@ -110,6 +150,7 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
         </div>
         <CardDescription>
           Opcionalmente, vincule uma URL de Gist para puxar o código para este app. Esta ferramenta nunca fará commit no seu Gist.
+          Você também pode abrir Gists diretamente no DartPad.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -132,14 +173,29 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
              </p>
            )}
         </div>
-        <Button onClick={handleSync} disabled={folder.gitSyncStatus === 'syncing'} className="w-full sm:w-auto">
-          {folder.gitSyncStatus === 'syncing' ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <RefreshCw className="mr-2 h-4 w-4" />
-          )}
-          {folder.gitSyncStatus === 'syncing' ? 'Sincronizando...' : 'Sincronizar com Gist'}
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button 
+            onClick={handleSync} 
+            disabled={folder.gitSyncStatus === 'syncing' || !repoUrl.trim()} 
+            className="w-full sm:flex-1"
+          >
+            {folder.gitSyncStatus === 'syncing' ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
+            {folder.gitSyncStatus === 'syncing' ? 'Sincronizando...' : 'Sincronizar com Gist'}
+          </Button>
+          <Button 
+            onClick={() => handleOpenInDartPad(repoUrl)} 
+            disabled={!repoUrl.trim()} 
+            variant="outline" 
+            className="w-full sm:flex-1"
+          >
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Abrir no DartPad
+          </Button>
+        </div>
         <div className="flex items-center space-x-2 pt-2">
           {getStatusIcon()}
           <p className={cn("text-sm", getStatusColor())}>
@@ -150,3 +206,4 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
     </Card>
   );
 }
+
