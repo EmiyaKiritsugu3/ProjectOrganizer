@@ -10,23 +10,23 @@ import { FolderOpen, Code } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 
 interface FolderViewProps {
-  folder: AppFolder;
-  onUpdateFolder: (updatedFolder: AppFolder) => void;
-  showEmbeddedDartPad: boolean;
-  onToggleEmbeddedDartPad: () => void;
+  folder: AppFolder | null; 
+  onUpdateFolder: (updatedFolder: Pick<AppFolder, 'id' | 'gitRepoUrl'>) => void;
 }
 
-export default function FolderView({ folder, onUpdateFolder, showEmbeddedDartPad, onToggleEmbeddedDartPad }: FolderViewProps) {
-  const gistId = useMemo(() => extractGistId(folder.gitRepoUrl), [folder.gitRepoUrl]);
+export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) {
+  const [showEmbeddedDartPad, setShowEmbeddedDartPad] = useState(false);
 
-  // Reset showEmbeddedDartPad when folder changes, but not if it's just a re-render due to gistId changing for the same folder
-  const [prevFolderId, setPrevFolderId] = useState<string | null>(null);
+  const toggleEmbeddedDartPad = () => {
+    setShowEmbeddedDartPad(prev => !prev);
+  };
+  
+  const gistId = useMemo(() => folder ? extractGistId(folder.gitRepoUrl) : null, [folder]);
+
+  // Reset showEmbeddedDartPad when folder changes
   useEffect(() => {
-    if (folder && folder.id !== prevFolderId) {
-      // onToggleEmbeddedDartPad(false); // This would make it `controlled` by parent for visibility
-      setPrevFolderId(folder.id);
-    }
-  }, [folder, prevFolderId, onToggleEmbeddedDartPad]);
+    setShowEmbeddedDartPad(false);
+  }, [folder?.id]);
 
 
   if (!folder) {
@@ -39,7 +39,7 @@ export default function FolderView({ folder, onUpdateFolder, showEmbeddedDartPad
     );
   }
   
-  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-flutter.html?id=${gistId}&theme=dark&split=40&channel=beta&run=true` : "";
+  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-flutter.html?run=true&id=${gistId}&theme=dark&split=40&channel=beta` : "";
 
   return (
     <ScrollArea className="h-full p-2 md:p-6">
@@ -70,7 +70,7 @@ export default function FolderView({ folder, onUpdateFolder, showEmbeddedDartPad
                 <CardContent>
                   <div className="aspect-video w-full overflow-hidden rounded-md border border-border bg-muted">
                     <iframe
-                      key={dartPadEmbedUrl} // Força o recarregamento do iframe quando a URL muda
+                      key={dartPadEmbedUrl} 
                       src={dartPadEmbedUrl}
                       className="w-full h-full"
                       style={{ border: 0 }} 
@@ -78,7 +78,9 @@ export default function FolderView({ folder, onUpdateFolder, showEmbeddedDartPad
                       allow="clipboard-write"
                     ></iframe>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">Tentando executar código automaticamente. Pode levar alguns segundos para carregar. Usando canal Beta do Flutter.</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Tentando executar código automaticamente. Pode levar alguns segundos para carregar. Usando canal Beta do Flutter.
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -89,7 +91,7 @@ export default function FolderView({ folder, onUpdateFolder, showEmbeddedDartPad
           folder={folder} 
           onUpdateFolder={onUpdateFolder} 
           showEmbeddedDartPad={showEmbeddedDartPad}
-          onToggleEmbeddedDartPad={onToggleEmbeddedDartPad}
+          onToggleEmbeddedDartPad={toggleEmbeddedDartPad}
           gistIdForEmbed={gistId}
         />
         
