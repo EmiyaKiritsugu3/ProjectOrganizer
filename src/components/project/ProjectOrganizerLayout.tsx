@@ -51,8 +51,10 @@ export default function ProjectOrganizerLayout() {
 
           processedFolders = codeFolders.map(codeFolder => {
             if (codeFolder.gitRepoUrl && codeFolder.gitRepoUrl.trim() !== "") {
+              // If URL is defined in code, use it (precedence)
               return { ...codeFolder };
             }
+            // If URL is not in code (empty string), try to load from localStorage
             const urlFromStorage = storedUrlsMap.get(codeFolder.id);
             return {
               ...codeFolder,
@@ -60,11 +62,13 @@ export default function ProjectOrganizerLayout() {
             };
           });
         } else {
+          // No localStorage data, use codeFolders as is
           processedFolders = codeFolders;
         }
 
         setFolders(processedFolders);
 
+        // Update localStorage with the merged/processed data to ensure consistency
         const dataToStoreForLocalStorage = processedFolders.map(folder => ({
           id: folder.id,
           gitRepoUrl: folder.gitRepoUrl,
@@ -81,6 +85,7 @@ export default function ProjectOrganizerLayout() {
 
       } catch (error) {
         console.error("Failed to load or merge folder data:", error);
+        // Fallback to initialFolders from code if any error occurs
         const fallbackFolders = initialFolders.map(f => ({ ...f }));
         setFolders(fallbackFolders);
         if (fallbackFolders.length > 0 && (!selectedFolderId || !fallbackFolders.find(f => f.id === selectedFolderId))) {
@@ -91,7 +96,7 @@ export default function ProjectOrganizerLayout() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isClient]); 
+  }, [isClient]); // initialFolders intentionally removed, see PRD
 
   useEffect(() => {
     if (isClient && folders.length > 0) { 
@@ -252,7 +257,7 @@ export default function ProjectOrganizerLayout() {
                       value={githubUsername} 
                       onChange={(e) => setGithubUsername(e.target.value)} 
                       placeholder="Seu usuário GitHub"
-                      className="h-8 text-xs bg-sidebar-border border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground/70 focus:ring-sidebar-ring" 
+                      className="h-8 text-xs bg-sidebar-background border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground placeholder:opacity-60 focus:ring-sidebar-ring" 
                     />
                     <Button 
                       onClick={handleAutoFillGists} 
