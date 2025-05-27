@@ -17,7 +17,7 @@ Siga os passos abaixo para executar este projeto na sua máquina.
 1.  **Clone ou Baixe o Projeto**:
     Se estiver usando Git, clone o repositório:
     ```bash
-    git clone <URL_DO_REPOSITORIO>
+    git clone <URL_DO_REPOSITORIO_DO_SEU_PROJETO_NO_GITHUB>
     cd <NOME_DA_PASTA_DO_PROJETO>
     ```
     Caso contrário, baixe o arquivo ZIP do código-fonte e extraia-o.
@@ -50,10 +50,38 @@ Siga os passos abaixo para executar este projeto na sua máquina.
 
     Você deverá ver a interface do Project Organizer. As URLs dos Gists para cada "App" (receita) devem estar pré-carregadas conforme definido em `src/data/folders.ts`.
 
+## Como Disponibilizar Online para o Professor (Recomendado)
+
+A maneira mais fácil para seu professor e monitores acessarem seu projeto é hospedando-o online. Plataformas como **Vercel** ou **Netlify** oferecem integração direta com o GitHub e planos gratuitos ideais para este tipo de projeto.
+
+**Como funciona:**
+
+1.  **Mantenha seu Projeto no GitHub:**
+    *   Certifique-se de que todo o código do seu Project Organizer, incluindo o arquivo `src/data/folders.ts` com as URLs dos seus Gists preenchidas, esteja em um repositório no GitHub.
+
+2.  **Escolha uma Plataforma de Hospedagem:**
+    *   **Vercel ([vercel.com](https://vercel.com))**: Criadores do Next.js, integração perfeita.
+    *   **Netlify ([netlify.com](https://netlify.com))**: Ótimo suporte para Next.js.
+
+3.  **Crie uma Conta e Conecte seu Repositório:**
+    *   Cadastre-se na plataforma escolhida (geralmente, você pode usar sua conta do GitHub para isso).
+    *   Siga as instruções da plataforma para importar ou conectar seu repositório GitHub onde está o código do Project Organizer.
+    *   A plataforma geralmente detectará que é um projeto Next.js e configurará o processo de build e deploy automaticamente.
+
+4.  **Primeiro Deploy e URL Pública:**
+    *   Após a configuração, a plataforma fará o primeiro build e deploy do seu aplicativo.
+    *   Você receberá uma URL pública (ex: `seunome-projeto.vercel.app` ou `seu-projeto.netlify.app`). Compartilhe esta URL com seu professor.
+
+5.  **Atualizando com Novos Gists:**
+    *   Quando você adicionar novas receitas (novos Gists):
+        1.  Edite o arquivo `src/data/folders.ts` no seu computador, adicionando as novas URLs dos Gists.
+        2.  Faça o commit dessas alterações e envie-as para o seu repositório GitHub com `git push`.
+    *   A plataforma de hospedagem (Vercel/Netlify) detectará automaticamente o `push`, fará um novo build do seu aplicativo com os dados atualizados e o publicará na mesma URL. Assim, seu professor sempre terá acesso à versão mais recente com todos os seus Gists.
+
 ### Informações Adicionais
 
-*   **URLs dos Gists**: As URLs dos Gists para cada receita estão pré-definidas no arquivo `src/data/folders.ts`. Se você (aluno) modificou este arquivo com suas próprias URLs de Gist, essas serão as que o professor verá ao executar o projeto.
-*   **Persistência de Dados**: As URLs dos Gists inseridas na interface são salvas no `localStorage` do navegador. Isso significa que as alterações feitas por um usuário em um navegador não afetarão outros usuários ou outros navegadores. O professor verá os Gists definidos em `src/data/folders.ts` na primeira vez que abrir.
-*   **DartPad Embutido**: A funcionalidade de visualização embutida do DartPad pode se comportar de maneira ligeiramente diferente em ambientes de preview (como o do Firebase Studio) em comparação com navegadores padrão. Recomenda-se testar em um navegador como Chrome ou Edge para a experiência completa.
+*   **URLs dos Gists**: As URLs dos Gists para cada receita estão pré-definidas no arquivo `src/data/folders.ts`. Se você (aluno) modificou este arquivo com suas próprias URLs de Gist e fez o `push` para o GitHub, essas serão as que o professor verá ao acessar a URL hospedada ou ao executar o projeto localmente a partir do seu código atualizado.
+*   **Persistência de Dados (LocalStorage)**: As URLs dos Gists inseridas na interface são salvas no `localStorage` do navegador do usuário. Isso é útil para o desenvolvimento local, mas não afeta o que o professor vê (ele verá o que está em `src/data/folders.ts` da versão que ele está executando ou acessando online).
+*   **DartPad Embutido**: A funcionalidade de visualização embutida do DartPad pode se comportar de maneira ligeiramente diferente em ambientes de preview (como o do Firebase Studio) em comparação com navegadores padrão ou a versão hospedada. Recomenda-se testar na versão hospedada ou em um navegador como Chrome ou Edge para a experiência completa.
 
-Seu professor agora deve ter as instruções necessárias para executar o projeto facilmente!
+Seguindo a opção de hospedagem, seu professor terá acesso facilitado e sempre atualizado ao seu trabalho!
