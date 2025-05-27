@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { extractGistId } from "@/lib/utils";
-import { ExternalLink, AlertTriangle } from "lucide-react";
+import { ExternalLink, AlertTriangle, PlayCircle, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface GitIntegrationCardProps {
@@ -52,23 +52,34 @@ export default function GitIntegrationCard({
 
   return (
     <Card className="w-full shadow-md hover:shadow-lg transition-shadow">
-      <CardHeader className="p-4">
-        <CardTitle className="text-xl font-semibold text-primary">{folder.name}</CardTitle>
+      <CardHeader className="p-4 pb-2">
+        <CardTitle className="text-lg font-semibold text-primary">{folder.name}</CardTitle>
       </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <div className="space-y-3">
+      <CardContent className="p-4 pt-2">
+        <div className="space-y-2">
           <div>
             <Label htmlFor={`gist-url-${folder.id}`} className="text-sm font-medium text-foreground mb-1 block">
-              URL ou ID do Gist (Editável)
+              URL / ID do Gist
             </Label>
-            <Input
-              id={`gist-url-${folder.id}`}
-              type="text"
-              placeholder="Cole a URL do Gist, URL do DartPad ou apenas o ID"
-              value={repoUrl}
-              onChange={(e) => handleUrlChange(e.target.value)}
-              className="w-full"
-            />
+            <div className="flex items-stretch gap-2">
+              <Input
+                id={`gist-url-${folder.id}`}
+                type="text"
+                placeholder="Cole a URL do Gist, URL do DartPad ou apenas o ID"
+                value={repoUrl}
+                onChange={(e) => handleUrlChange(e.target.value)}
+                className="flex-grow"
+              />
+              <Button 
+                onClick={() => handleOpenInDartPad(repoUrl)} 
+                disabled={!isValidGistInputForActions} 
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Abrir
+              </Button>
+            </div>
             {!isValidGistInputForActions && repoUrl.trim() !== "" && (
                <p className="pt-1 text-xs text-destructive flex items-center gap-1">
                  <AlertTriangle size={14} />
@@ -76,18 +87,9 @@ export default function GitIntegrationCard({
                </p>
              )}
           </div>
-          <Button 
-              onClick={() => handleOpenInDartPad(repoUrl)} 
-              disabled={!isValidGistInputForActions} 
-              variant="outline"
-              className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-            >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Abrir Gist no DartPad (Nova Aba)
-          </Button>
         </div>
         {folder.description && (
-            <CardDescription className="text-sm text-muted-foreground mt-3">
+            <CardDescription className="text-xs text-muted-foreground mt-2">
                 {folder.description}
             </CardDescription>
         )}
