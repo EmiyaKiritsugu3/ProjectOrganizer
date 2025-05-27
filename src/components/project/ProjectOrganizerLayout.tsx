@@ -16,19 +16,76 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Folder, FolderOpen, Rocket } from 'lucide-react'; // Adicionado FolderOpen
+import { Folder, FolderOpen, Rocket } from 'lucide-react';
+
+const LOCAL_STORAGE_KEY = 'projectOrganizerFolderData';
 
 export default function ProjectOrganizerLayout() {
-  const [folders, setFolders] = useState<AppFolder[]>(initialFolders);
+  const [folders, setFolders] = useState<AppFolder[]>(() => {
+    // Initialize with initialFolders, will be overridden by localStorage if available client-side
+    return initialFolders;
+  });
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-    if (initialFolders.length > 0 && !selectedFolderId) {
-      setSelectedFolderId(initialFolders[0].id);
+  }, []);
+
+  // Load folders from localStorage on initial client-side mount
+  useEffect(() => {
+    if (isClient) {
+      try {
+        const storedFolderDataString = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (storedFolderDataString) {
+          const storedFolderData: Array<{ id: string; gitRepoUrl: string }> = JSON.parse(storedFolderDataString);
+          const urlMap = new Map(storedFolderData.map(item => [item.id, item.gitRepoUrl]));
+
+          setFolders(prevInitialFolders => {
+            const updatedFolders = initialFolders.map(folder => ({
+              ...folder,
+              gitRepoUrl: urlMap.get(folder.id) !== undefined ? urlMap.get(folder.id)! : folder.gitRepoUrl,
+            }));
+             // Ensure a folder is selected if one was previously or if it's the first load
+            if (updatedFolders.length > 0) {
+              if (!selectedFolderId || !updatedFolders.find(f => f.id === selectedFolderId)) {
+                setSelectedFolderId(updatedFolders[0].id);
+              }
+            }
+            return updatedFolders;
+          });
+        } else {
+          // No stored data, use initialFolders and select the first one
+          setFolders(initialFolders);
+          if (initialFolders.length > 0 && !selectedFolderId) {
+            setSelectedFolderId(initialFolders[0].id);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load folder data from localStorage:", error);
+        // Fallback to initialFolders if localStorage parsing fails
+        setFolders(initialFolders);
+        if (initialFolders.length > 0 && !selectedFolderId) {
+            setSelectedFolderId(initialFolders[0].id);
+        }
+      }
     }
-  }, [selectedFolderId]);
+  }, [isClient]); // Removed selectedFolderId from dependencies as it's handled inside
+
+  // Save folders to localStorage whenever they change
+  useEffect(() => {
+    if (isClient && folders.length > 0) { // Only save if folders are initialized
+      try {
+        const dataToStore = folders.map(folder => ({
+          id: folder.id,
+          gitRepoUrl: folder.gitRepoUrl,
+        }));
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToStore));
+      } catch (error) {
+        console.error("Failed to save folder data to localStorage:", error);
+      }
+    }
+  }, [folders, isClient]);
 
 
   const handleSelectFolder = (folderId: string) => {
@@ -42,13 +99,23 @@ export default function ProjectOrganizerLayout() {
   };
 
   const selectedFolder = useMemo(() => {
-    return folders.find(f => f.id === selectedFolderId) || null;
-  }, [folders, selectedFolderId]);
+    // Ensure folders array is not empty before trying to find
+    if (folders.length === 0 && initialFolders.length > 0 && isClient) {
+      // This case might happen if localStorage is empty and folders haven't been set yet
+      // but it should be covered by the loading useEffect.
+      // However, as a fallback, ensure we return a folder from initialFolders if 'folders' is empty.
+       const foundInInitial = initialFolders.find(f => f.id === selectedFolderId);
+       if (foundInInitial) return foundInInitial;
+       if (selectedFolderId === null && initialFolders.length > 0) return initialFolders[0];
+       return null;
+    }
+    return folders.find(f => f.id === selectedFolderId) || (folders.length > 0 ? folders[0] : null) ;
+  }, [folders, selectedFolderId, isClient]);
 
   if (!isClient) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <Rocket className="h-12 w-12 animate-pulse text-primary" /> 
+        <Rocket className="h-12 w-12 animate-pulse text-primary" />
         <p className="ml-4 text-xl font-semibold text-primary">Loading Project Organizer...</p>
       </div>
     );
@@ -68,7 +135,7 @@ export default function ProjectOrganizerLayout() {
           </SidebarHeader>
           <SidebarContent className="p-2">
             <SidebarMenu>
-              {folders.map(folder => (
+              {(folders.length > 0 ? folders : initialFolders).map(folder => (
                 <SidebarMenuItem key={folder.id}>
                   <SidebarMenuButton
                     onClick={() => handleSelectFolder(folder.id)}
@@ -98,7 +165,7 @@ export default function ProjectOrganizerLayout() {
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4 text-center">
               <FolderOpen size={48} className="mb-4" />
               <p className="text-lg">Welcome to Project Organizer!</p>
-              <p>Select an app from the sidebar to view its details.</p>
+              <p>Select an app from the sidebar to view its details or wait for folders to load.</p>
             </div>
           )}
         </SidebarInset>
