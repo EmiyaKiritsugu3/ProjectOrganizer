@@ -16,16 +16,22 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Folder, FolderOpen, Rocket } from 'lucide-react';
+import { Folder, FolderOpen, Rocket, Download, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { useToast } from "@/hooks/use-toast";
 
 const LOCAL_STORAGE_KEY = 'projectOrganizerFolderData';
 
 export default function ProjectOrganizerLayout() {
+  const { toast } = useToast();
   const [folders, setFolders] = useState<AppFolder[]>(() => {
     return initialFolders.map(f => ({ ...f })); 
   });
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [githubUsername, setGithubUsername] = useState('');
 
   useEffect(() => {
     setIsClient(true);
@@ -43,15 +49,13 @@ export default function ProjectOrganizerLayout() {
           const storedUrlsMap = new Map(storedFolderUrls.map(item => [item.id, item.gitRepoUrl]));
 
           processedFolders = codeFolders.map(codeFolder => {
-            // Se a URL no código (initialFolders.ts) NÃO estiver vazia, ela tem precedência.
             if (codeFolder.gitRepoUrl && codeFolder.gitRepoUrl.trim() !== "") {
               return { ...codeFolder };
             }
-            // Se a URL no código ESTIVER vazia, usar a do localStorage, se existir.
             const urlFromStorage = storedUrlsMap.get(codeFolder.id);
             return {
               ...codeFolder,
-              gitRepoUrl: urlFromStorage !== undefined ? urlFromStorage : codeFolder.gitRepoUrl, // Mantém a do código (vazia) se não houver no storage
+              gitRepoUrl: urlFromStorage !== undefined ? urlFromStorage : codeFolder.gitRepoUrl, 
             };
           });
         } else {
@@ -60,7 +64,6 @@ export default function ProjectOrganizerLayout() {
 
         setFolders(processedFolders);
 
-        // Salva o estado processado de volta no localStorage
         const dataToStoreForLocalStorage = processedFolders.map(folder => ({
           id: folder.id,
           gitRepoUrl: folder.gitRepoUrl,
@@ -133,11 +136,81 @@ export default function ProjectOrganizerLayout() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'gist_recipes_backup.json';
+    a.download = 'project_organizer_config.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    toast({
+      title: "Configuração Salva",
+      description: "Os dados de todas as receitas foram salvos em project_organizer_config.json.",
+    });
+  };
+
+  const handleAutoFillGists = async () => {
+    if (!githubUsername.trim()) {
+      toast({ title: "Nome de Usuário Necessário", description: "Por favor, insira seu nome de usuário do GitHub.", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Buscando Gists...", description: `Procurando Gists para o usuário ${githubUsername}.` });
+    try {
+      const response = await fetch(`https://api.github.com/users/${githubUsername}/gists`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(`Usuário do GitHub "${githubUsername}" não encontrado.`);
+        }
+        throw new Error(`Erro ao buscar Gists: ${response.status} ${response.statusText}`);
+      }
+      const userGists = await response.json();
+
+      if (!Array.isArray(userGists)) {
+          throw new Error("A resposta da API do GitHub não foi uma lista de Gists como esperado.");
+      }
+
+      let gistsFoundCount = 0;
+      const updatedFolders = folders.map(folder => {
+        const recipeNumber = parseInt(folder.id, 10);
+        if (isNaN(recipeNumber)) return folder;
+
+        const searchPattern1 = new RegExp(`POO_Receita_0*${recipeNumber}`, 'i');
+        const searchPattern2 = new RegExp(`POO Receita 0*${recipeNumber}`, 'i');
+        const searchPattern3 = new RegExp(`Receita_0*${recipeNumber}`, 'i');
+        const searchPattern4 = new RegExp(`Receita 0*${recipeNumber}`, 'i');
+
+
+        const foundGist = userGists.find(gist =>
+          gist.description && 
+          (searchPattern1.test(gist.description) || 
+           searchPattern2.test(gist.description) ||
+           searchPattern3.test(gist.description) ||
+           searchPattern4.test(gist.description))
+        );
+
+        if (foundGist && foundGist.html_url) {
+          gistsFoundCount++;
+          return { ...folder, gitRepoUrl: foundGist.html_url };
+        }
+        return folder;
+      });
+
+      setFolders(updatedFolders);
+      toast({
+        title: "Busca de Gists Concluída",
+        description: `${gistsFoundCount} Gist(s) encontrados e URLs correspondentes foram preenchidas. As alterações foram salvas localmente.`,
+      });
+
+    } catch (error) {
+      console.error("Erro ao buscar Gists:", error);
+      let errorMessage = "Ocorreu um erro ao buscar os Gists.";
+      if (error instanceof Error) {
+          errorMessage = error.message;
+      }
+      toast({
+        title: "Erro na Busca de Gists",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
 
@@ -188,11 +261,44 @@ export default function ProjectOrganizerLayout() {
                {selectedFolder ? selectedFolder.name : "App Details"}
              </h2>
            </header>
+
+          <div className="p-4 border-b bg-card">
+            <div className="max-w-2xl mx-auto">
+              <h2 className="text-lg font-semibold mb-3 text-center text-primary">Ferramentas</h2>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="githubUser" className="text-sm font-medium text-foreground/90">
+                    Preencher Gists por Usuário do GitHub
+                  </Label>
+                  <div className="mt-1 flex items-stretch gap-2">
+                    <Input 
+                      id="githubUser" 
+                      value={githubUsername} 
+                      onChange={(e) => setGithubUsername(e.target.value)} 
+                      placeholder="Seu nome de usuário do GitHub"
+                      className="flex-grow" 
+                    />
+                    <Button onClick={handleAutoFillGists} className="whitespace-nowrap">
+                      <Search className="mr-2 h-4 w-4" />
+                      Buscar Gists
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Busca Gists cuja descrição corresponda a "POO_Receita_XX" ou "Receita XX".
+                  </p>
+                </div>
+                <Button onClick={handleSaveAllFoldersToJson} variant="outline" className="w-full">
+                  <Download className="mr-2 h-4 w-4" />
+                  Salvar Configuração Atual em JSON
+                </Button>
+              </div>
+            </div>
+          </div>
+
           {selectedFolder ? (
             <FolderView 
               folder={selectedFolder} 
               onUpdateFolder={handleUpdateFolder}
-              onSaveAllFoldersToJson={handleSaveAllFoldersToJson} 
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4 text-center">
@@ -206,3 +312,5 @@ export default function ProjectOrganizerLayout() {
     </SidebarProvider>
   );
 }
+
+    

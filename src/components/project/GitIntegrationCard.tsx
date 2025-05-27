@@ -8,10 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { extractGistId } from "@/lib/utils";
-import { FileCode, ExternalLink, AlertTriangle, PlayCircle, X, Download } from "lucide-react";
+import { FileCode, ExternalLink, AlertTriangle, PlayCircle, X } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
 
 interface GitIntegrationCardProps {
   folder: AppFolder;
@@ -19,7 +17,6 @@ interface GitIntegrationCardProps {
   showEmbeddedDartPad: boolean;
   onToggleEmbeddedDartPad: () => void;
   gistIdForEmbed: string | null;
-  onSaveAllFoldersToJson: () => void;
 }
 
 export default function GitIntegrationCard({ 
@@ -27,8 +24,7 @@ export default function GitIntegrationCard({
   onUpdateFolder,
   showEmbeddedDartPad,
   onToggleEmbeddedDartPad,
-  gistIdForEmbed,
-  onSaveAllFoldersToJson
+  gistIdForEmbed
 }: GitIntegrationCardProps) {
   const { toast } = useToast();
   const [repoUrl, setRepoUrl] = useState(folder.gitRepoUrl);
@@ -69,13 +65,13 @@ export default function GitIntegrationCard({
         </div>
         <CardDescription>
           Vincule uma URL de Gist (p.ex., gist.github.com/username/id), uma URL do DartPad (p.ex., dartpad.dev/id) ou apenas o ID do Gist.
-          Você pode abrir Gists diretamente no DartPad ou visualizá-los embutidos nesta página.
+          Você pode abrir Gists diretamente no DartPad ou visualizá-los embutidos nesta página. As URLs podem ser preenchidas automaticamente usando a ferramenta acima.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
           <Label htmlFor={`gist-url-${folder.id}`} className="text-sm font-medium">
-            URL ou ID do Gist
+            URL ou ID do Gist (Editável)
           </Label>
           <div className="mt-1 flex items-center gap-2">
             <Input
@@ -86,23 +82,6 @@ export default function GitIntegrationCard({
               onChange={(e) => handleUrlChange(e.target.value)}
               className="flex-grow"
             />
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    onClick={onSaveAllFoldersToJson} 
-                    variant="outline" 
-                    size="icon"
-                    aria-label="Salvar todas as URLs em JSON"
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Salvar dados de todas as receitas em JSON</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
            {!isValidGistInputForActions && repoUrl.trim() !== "" && (
              <p className="mt-2 text-xs text-destructive flex items-center gap-1">
@@ -111,24 +90,24 @@ export default function GitIntegrationCard({
              </p>
            )}
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button 
-            onClick={onToggleEmbeddedDartPad} 
-            disabled={!gistIdForEmbed} 
-            variant="default"
-            className="w-full sm:w-auto flex-1" // Ajuste para flexibilidade
-          >
-            {showEmbeddedDartPad ? <X className="mr-2 h-4 w-4" /> : <PlayCircle className="mr-2 h-4 w-4" />}
-            {showEmbeddedDartPad ? "Fechar DartPad Embutido" : "Visualizar e Executar no DartPad Embutido"}
-          </Button>
+        <div className="flex flex-col sm:flex-row-reverse gap-2">
           <Button 
             onClick={() => handleOpenInDartPad(repoUrl)} 
             disabled={!isValidGistInputForActions} 
             variant="outline" 
-            className="w-full sm:w-auto flex-1" // Ajuste para flexibilidade
+            className="w-full sm:w-auto flex-1"
           >
             <ExternalLink className="mr-2 h-4 w-4" />
             Abrir Gist no DartPad (Nova Aba)
+          </Button>
+          <Button 
+            onClick={onToggleEmbeddedDartPad} 
+            disabled={!gistIdForEmbed} 
+            variant="default"
+            className="w-full sm:w-auto flex-1"
+          >
+            {showEmbeddedDartPad ? <X className="mr-2 h-4 w-4" /> : <PlayCircle className="mr-2 h-4 w-4" />}
+            {showEmbeddedDartPad ? "Fechar DartPad Embutido" : "Visualizar e Executar no DartPad Embutido"}
           </Button>
         </div>
          <p className="text-xs text-muted-foreground pt-2">
@@ -138,3 +117,5 @@ export default function GitIntegrationCard({
     </Card>
   );
 }
+
+    

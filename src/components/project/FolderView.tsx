@@ -12,10 +12,9 @@ import { useState, useMemo } from "react";
 interface FolderViewProps {
   folder: AppFolder;
   onUpdateFolder: (updatedFolder: AppFolder) => void;
-  onSaveAllFoldersToJson: () => void;
 }
 
-export default function FolderView({ folder, onUpdateFolder, onSaveAllFoldersToJson }: FolderViewProps) {
+export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) {
   const [showEmbeddedDartPad, setShowEmbeddedDartPad] = useState(false);
 
   const gistId = useMemo(() => extractGistId(folder.gitRepoUrl), [folder.gitRepoUrl]);
@@ -87,7 +86,6 @@ export default function FolderView({ folder, onUpdateFolder, onSaveAllFoldersToJ
           showEmbeddedDartPad={showEmbeddedDartPad}
           onToggleEmbeddedDartPad={toggleEmbeddedDartPad}
           gistIdForEmbed={gistId}
-          onSaveAllFoldersToJson={onSaveAllFoldersToJson}
         />
         
         <div className="mt-8 text-center text-xs text-muted-foreground">
@@ -97,3 +95,5 @@ export default function FolderView({ folder, onUpdateFolder, onSaveAllFoldersToJ
     </ScrollArea>
   );
 }
+
+    
