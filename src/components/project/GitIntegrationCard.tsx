@@ -3,28 +3,22 @@
 
 import type { AppFolder } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { extractGistId } from "@/lib/utils";
-import { FileCode, ExternalLink, AlertTriangle, PlayCircle, X } from "lucide-react";
+import { ExternalLink, AlertTriangle } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface GitIntegrationCardProps {
   folder: AppFolder;
   onUpdateFolder: (updatedFolder: Pick<AppFolder, 'id' | 'gitRepoUrl'>) => void;
-  showEmbeddedDartPad: boolean;
-  onToggleEmbeddedDartPad: () => void;
-  gistIdForEmbed: string | null;
 }
 
 export default function GitIntegrationCard({ 
   folder, 
   onUpdateFolder,
-  showEmbeddedDartPad,
-  onToggleEmbeddedDartPad,
-  gistIdForEmbed
 }: GitIntegrationCardProps) {
   const { toast } = useToast();
   const [repoUrl, setRepoUrl] = useState(folder.gitRepoUrl);
@@ -50,72 +44,51 @@ export default function GitIntegrationCard({
       return;
     }
 
-    const dartPadUrl = `https://dartpad.dev/${gistId}`;
+    const dartPadUrl = `https://dartpad.dev/${gistId}?channel=beta`;
     window.open(dartPadUrl, '_blank', 'noopener,noreferrer');
   };
   
   const isValidGistInputForActions = !!extractGistId(repoUrl);
 
   return (
-    <Card className="mt-6 shadow-lg">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <FileCode className="h-6 w-6 text-primary" />
-          <CardTitle>Integração com Gist</CardTitle>
-        </div>
-        <CardDescription>
-          Vincule uma URL de Gist (p.ex., gist.github.com/username/id), uma URL do DartPad (p.ex., dartpad.dev/id) ou apenas o ID do Gist.
-          Você pode abrir Gists diretamente no DartPad ou visualizá-los embutidos nesta página. As URLs podem ser preenchidas automaticamente usando a ferramenta acima.
-        </CardDescription>
+    <Card className="w-full shadow-md mb-4">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-lg font-semibold">{folder.name}</CardTitle>
+        <Button 
+            onClick={() => handleOpenInDartPad(repoUrl)} 
+            disabled={!isValidGistInputForActions} 
+            variant="outline"
+            size="sm"
+            className="ml-auto"
+          >
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Abrir Gist no DartPad
+        </Button>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <Label htmlFor={`gist-url-${folder.id}`} className="text-sm font-medium">
+      <CardContent>
+        <div className="space-y-1">
+          <Label htmlFor={`gist-url-${folder.id}`} className="text-xs text-muted-foreground">
             URL ou ID do Gist (Editável)
           </Label>
-          <div className="mt-1 flex items-center gap-2">
-            <Input
-              id={`gist-url-${folder.id}`}
-              type="text"
-              placeholder="URL do Gist, URL do DartPad ou ID do Gist"
-              value={repoUrl}
-              onChange={(e) => handleUrlChange(e.target.value)}
-              className="flex-grow"
-            />
-          </div>
-           {!isValidGistInputForActions && repoUrl.trim() !== "" && (
-             <p className="mt-2 text-xs text-destructive flex items-center gap-1">
+          <Input
+            id={`gist-url-${folder.id}`}
+            type="text"
+            placeholder="URL do Gist, URL do DartPad ou ID do Gist"
+            value={repoUrl}
+            onChange={(e) => handleUrlChange(e.target.value)}
+            className="h-9"
+          />
+          {!isValidGistInputForActions && repoUrl.trim() !== "" && (
+             <p className="pt-1 text-xs text-destructive flex items-center gap-1">
                <AlertTriangle size={14} />
                A URL ou ID do Gist parece inválida para as ações.
              </p>
            )}
         </div>
-        <div className="flex flex-col sm:flex-row-reverse gap-2">
-          <Button 
-            onClick={() => handleOpenInDartPad(repoUrl)} 
-            disabled={!isValidGistInputForActions} 
-            variant="outline" 
-            className="w-full sm:w-auto flex-1"
-          >
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Abrir Gist no DartPad (Nova Aba)
-          </Button>
-          <Button 
-            onClick={onToggleEmbeddedDartPad} 
-            disabled={!gistIdForEmbed} 
-            variant="default"
-            className="w-full sm:w-auto flex-1"
-          >
-            {showEmbeddedDartPad ? <X className="mr-2 h-4 w-4" /> : <PlayCircle className="mr-2 h-4 w-4" />}
-            {showEmbeddedDartPad ? "Fechar DartPad Embutido" : "Visualizar e Executar no DartPad Embutido"}
-          </Button>
-        </div>
-         <p className="text-xs text-muted-foreground pt-2">
-            O DartPad sempre carrega a versão mais recente do Gist. A visualização embutida aparecerá abaixo dos detalhes do projeto quando ativada.
-        </p>
+        <CardDescription className="text-xs text-muted-foreground mt-2">
+            {folder.description}
+        </CardDescription>
       </CardContent>
     </Card>
   );
 }
-
-    
