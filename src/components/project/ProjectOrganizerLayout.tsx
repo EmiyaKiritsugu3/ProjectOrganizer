@@ -15,6 +15,7 @@ import {
   SidebarMenuButton,
   SidebarInset,
   SidebarTrigger,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Folder, FolderOpen, Rocket, Download, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -49,9 +50,11 @@ export default function ProjectOrganizerLayout() {
           const storedUrlsMap = new Map(storedFolderUrls.map(item => [item.id, item.gitRepoUrl]));
 
           processedFolders = codeFolders.map(codeFolder => {
+            // Se a URL no código não estiver vazia, ela tem precedência.
             if (codeFolder.gitRepoUrl && codeFolder.gitRepoUrl.trim() !== "") {
               return { ...codeFolder };
             }
+            // Caso contrário, tenta pegar do localStorage. Se não existir lá, mantém a do código (que seria vazia).
             const urlFromStorage = storedUrlsMap.get(codeFolder.id);
             return {
               ...codeFolder,
@@ -64,6 +67,7 @@ export default function ProjectOrganizerLayout() {
 
         setFolders(processedFolders);
 
+        // Salva de volta no localStorage o estado mesclado/processado para manter a consistência
         const dataToStoreForLocalStorage = processedFolders.map(folder => ({
           id: folder.id,
           gitRepoUrl: folder.gitRepoUrl,
@@ -80,6 +84,7 @@ export default function ProjectOrganizerLayout() {
 
       } catch (error) {
         console.error("Failed to load or merge folder data:", error);
+        // Fallback para os dados do código em caso de erro
         const fallbackFolders = initialFolders.map(f => ({ ...f }));
         setFolders(fallbackFolders);
         if (fallbackFolders.length > 0 && (!selectedFolderId || !fallbackFolders.find(f => f.id === selectedFolderId))) {
@@ -90,10 +95,10 @@ export default function ProjectOrganizerLayout() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isClient]); 
+  }, [isClient]); // A dependência de initialFolders foi removida intencionalmente
 
   useEffect(() => {
-    if (isClient && folders.length > 0) { 
+    if (isClient && folders.length > 0) { // Garante que só salva no localStorage após o carregamento inicial e se houver pastas
       try {
         const dataToStore = folders.map(folder => ({
           id: folder.id,
@@ -102,6 +107,7 @@ export default function ProjectOrganizerLayout() {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToStore));
       } catch (error) {
         console.error("Failed to save folder data to localStorage:", error);
+        // Poderia adicionar um toast aqui se o salvamento falhar
       }
     }
   }, [folders, isClient]);
@@ -154,6 +160,8 @@ export default function ProjectOrganizerLayout() {
     }
     toast({ title: "Buscando Gists...", description: `Procurando Gists para o usuário ${githubUsername}.` });
     try {
+      // Simulação de chamada API: https://api.github.com/users/USERNAME/gists
+      // Em um app real, faria um fetch aqui.
       const response = await fetch(`https://api.github.com/users/${githubUsername}/gists`);
       if (!response.ok) {
         if (response.status === 404) {
@@ -164,18 +172,20 @@ export default function ProjectOrganizerLayout() {
       const userGists = await response.json();
 
       if (!Array.isArray(userGists)) {
+          // Isso pode acontecer se a resposta não for o que esperamos (ex: um objeto de erro em vez de um array)
           throw new Error("A resposta da API do GitHub não foi uma lista de Gists como esperado.");
       }
 
       let gistsFoundCount = 0;
       const updatedFolders = folders.map(folder => {
-        const recipeNumber = parseInt(folder.id, 10);
-        if (isNaN(recipeNumber)) return folder;
+        const recipeNumber = parseInt(folder.id, 10); // Ex: '01' -> 1
+        if (isNaN(recipeNumber)) return folder; // Se o ID não for um número, pula
 
-        const searchPattern1 = new RegExp(`POO_Receita_0*${recipeNumber}`, 'i');
-        const searchPattern2 = new RegExp(`POO Receita 0*${recipeNumber}`, 'i');
-        const searchPattern3 = new RegExp(`Receita_0*${recipeNumber}`, 'i');
-        const searchPattern4 = new RegExp(`Receita 0*${recipeNumber}`, 'i');
+        // Padrões de busca mais flexíveis
+        const searchPattern1 = new RegExp(`POO_Receita_0*${recipeNumber}`, 'i'); // POO_Receita_01, POO_Receita_1
+        const searchPattern2 = new RegExp(`POO Receita 0*${recipeNumber}`, 'i'); // POO Receita 01, POO Receita 1
+        const searchPattern3 = new RegExp(`Receita_0*${recipeNumber}`, 'i'); // Receita_01, Receita_1
+        const searchPattern4 = new RegExp(`Receita 0*${recipeNumber}`, 'i'); // Receita 01, Receita 1
 
 
         const foundGist = userGists.find(gist =>
@@ -193,7 +203,7 @@ export default function ProjectOrganizerLayout() {
         return folder;
       });
 
-      setFolders(updatedFolders);
+      setFolders(updatedFolders); // Atualiza o estado com as novas URLs
       toast({
         title: "Busca de Gists Concluída",
         description: `${gistsFoundCount} Gist(s) encontrados e URLs correspondentes foram preenchidas. As alterações foram salvas localmente.`,
@@ -202,7 +212,7 @@ export default function ProjectOrganizerLayout() {
     } catch (error) {
       console.error("Erro ao buscar Gists:", error);
       let errorMessage = "Ocorreu um erro ao buscar os Gists.";
-      if (error instanceof Error) {
+      if (error instanceof Error) { // Verifica se é uma instância de Error para acessar message
           errorMessage = error.message;
       }
       toast({
@@ -215,6 +225,7 @@ export default function ProjectOrganizerLayout() {
 
 
   if (!isClient) {
+    // Simple loading state to avoid flash of unstyled content or hydration errors
     return (
       <div className="flex items-center justify-center h-screen">
         <Rocket className="h-12 w-12 animate-pulse text-primary" />
@@ -236,6 +247,49 @@ export default function ProjectOrganizerLayout() {
             </div>
           </SidebarHeader>
           <SidebarContent className="p-2">
+            <div className="p-2 group-data-[collapsible=icon]:hidden">
+              <h3 className="mb-3 text-sm font-semibold text-sidebar-foreground/90 text-center">
+                Ferramentas de Gist
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="githubUserSidebar" className="text-xs font-medium text-sidebar-foreground/80">
+                    Usuário GitHub
+                  </Label>
+                  <div className="mt-1 flex items-stretch gap-1">
+                    <Input 
+                      id="githubUserSidebar" 
+                      value={githubUsername} 
+                      onChange={(e) => setGithubUsername(e.target.value)} 
+                      placeholder="Seu usuário GitHub"
+                      className="h-8 text-xs bg-sidebar-background/50 border-sidebar-border focus:ring-sidebar-ring text-sidebar-foreground placeholder:text-sidebar-foreground/60" 
+                    />
+                    <Button 
+                      onClick={handleAutoFillGists} 
+                      size="sm" 
+                      variant="outline" 
+                      className="whitespace-nowrap text-xs px-2 py-1 h-8 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:ring-sidebar-ring"
+                    >
+                      <Search className="mr-1 h-3 w-3" />
+                      Buscar
+                    </Button>
+                  </div>
+                  <p className="text-xs text-sidebar-foreground/60 mt-1">
+                    Preenche URLs dos Gists automaticamente.
+                  </p>
+                </div>
+                <Button 
+                  onClick={handleSaveAllFoldersToJson} 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full text-xs px-2 py-1 h-8 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:ring-sidebar-ring"
+                >
+                  <Download className="mr-1 h-3 w-3" />
+                  Salvar Config. em JSON
+                </Button>
+              </div>
+            </div>
+            <SidebarSeparator className="my-3 bg-sidebar-border" />
             <SidebarMenu>
               {folders.map(folder => ( 
                 <SidebarMenuItem key={folder.id}>
@@ -262,38 +316,7 @@ export default function ProjectOrganizerLayout() {
              </h2>
            </header>
 
-          <div className="p-4 border-b bg-card">
-            <div className="max-w-2xl mx-auto">
-              <h2 className="text-lg font-semibold mb-3 text-center text-primary">Ferramentas</h2>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="githubUser" className="text-sm font-medium text-foreground/90">
-                    Preencher Gists por Usuário do GitHub
-                  </Label>
-                  <div className="mt-1 flex items-stretch gap-2">
-                    <Input 
-                      id="githubUser" 
-                      value={githubUsername} 
-                      onChange={(e) => setGithubUsername(e.target.value)} 
-                      placeholder="Seu nome de usuário do GitHub"
-                      className="flex-grow" 
-                    />
-                    <Button onClick={handleAutoFillGists} className="whitespace-nowrap">
-                      <Search className="mr-2 h-4 w-4" />
-                      Buscar Gists
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Busca Gists cuja descrição corresponda a "POO_Receita_XX" ou "Receita XX".
-                  </p>
-                </div>
-                <Button onClick={handleSaveAllFoldersToJson} variant="outline" className="w-full">
-                  <Download className="mr-2 h-4 w-4" />
-                  Salvar Configuração Atual em JSON
-                </Button>
-              </div>
-            </div>
-          </div>
+          {/* A seção de ferramentas foi movida para a Sidebar */}
 
           {selectedFolder ? (
             <FolderView 
