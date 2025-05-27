@@ -40,7 +40,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
     );
   }
   
-  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-flutter.html?id=${gistId}&theme=dark&split=40&run=true` : "";
+  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-flutter.html?id=${gistId}&theme=dark&split=40&run=true&channel=beta` : "";
 
   return (
     <ScrollArea className="h-full p-2 md:p-6">
@@ -65,7 +65,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
               <Card className="mb-6 shadow-md overflow-hidden">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <Code className="h-5 w-5" /> DartPad Embutido
+                    <Code className="h-5 w-5" /> DartPad Embutido (Canal Beta)
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -79,7 +79,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
                       allow="clipboard-write"
                     ></iframe>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">Tentando executar código automaticamente. Pode levar alguns segundos para carregar.</p>
+                  <p className="text-xs text-muted-foreground mt-2">Tentando executar código automaticamente. Pode levar alguns segundos para carregar. Usando canal Beta do Flutter.</p>
                 </CardContent>
               </Card>
             )}
