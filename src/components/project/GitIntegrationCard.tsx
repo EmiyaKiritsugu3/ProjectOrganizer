@@ -44,7 +44,8 @@ export default function GitIntegrationCard({
       return;
     }
 
-    const dartPadUrl = `https://dartpad.dev/${gistId}?channel=beta`;
+    // Adiciona run=true para execução automática
+    const dartPadUrl = `https://dartpad.dev/${gistId}?run=true&channel=beta`;
     window.open(dartPadUrl, '_blank', 'noopener,noreferrer');
   };
   
@@ -52,43 +53,46 @@ export default function GitIntegrationCard({
 
   return (
     <Card className="w-full shadow-md mb-4">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-lg font-semibold">{folder.name}</CardTitle>
-        <Button 
-            onClick={() => handleOpenInDartPad(repoUrl)} 
-            disabled={!isValidGistInputForActions} 
-            variant="outline"
-            size="sm"
-            className="ml-auto"
-          >
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Abrir Gist no DartPad
-        </Button>
+      <CardHeader className="pb-2 pt-4">
+        <CardTitle className="text-xl font-semibold">{folder.name}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-1">
-          <Label htmlFor={`gist-url-${folder.id}`} className="text-xs text-muted-foreground">
-            URL ou ID do Gist (Editável)
-          </Label>
-          <Input
-            id={`gist-url-${folder.id}`}
-            type="text"
-            placeholder="URL do Gist, URL do DartPad ou ID do Gist"
-            value={repoUrl}
-            onChange={(e) => handleUrlChange(e.target.value)}
-            className="h-9"
-          />
-          {!isValidGistInputForActions && repoUrl.trim() !== "" && (
-             <p className="pt-1 text-xs text-destructive flex items-center gap-1">
-               <AlertTriangle size={14} />
-               A URL ou ID do Gist parece inválida para as ações.
-             </p>
-           )}
+      <CardContent className="pt-2">
+        <div className="space-y-2">
+          <div>
+            <Label htmlFor={`gist-url-${folder.id}`} className="text-xs text-muted-foreground">
+              URL ou ID do Gist (Editável)
+            </Label>
+            <Input
+              id={`gist-url-${folder.id}`}
+              type="text"
+              placeholder="URL do Gist, URL do DartPad ou ID do Gist"
+              value={repoUrl}
+              onChange={(e) => handleUrlChange(e.target.value)}
+              className="h-9"
+            />
+            {!isValidGistInputForActions && repoUrl.trim() !== "" && (
+               <p className="pt-1 text-xs text-destructive flex items-center gap-1">
+                 <AlertTriangle size={14} />
+                 A URL ou ID do Gist parece inválida para as ações.
+               </p>
+             )}
+          </div>
+          <Button 
+              onClick={() => handleOpenInDartPad(repoUrl)} 
+              disabled={!isValidGistInputForActions} 
+              variant="outline"
+              size="sm"
+              className="w-full"
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Abrir Gist no DartPad (Nova Aba)
+          </Button>
         </div>
-        <CardDescription className="text-xs text-muted-foreground mt-2">
+        <CardDescription className="text-xs text-muted-foreground mt-3">
             {folder.description}
         </CardDescription>
       </CardContent>
     </Card>
   );
 }
+
