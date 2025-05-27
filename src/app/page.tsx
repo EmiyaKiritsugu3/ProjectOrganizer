@@ -134,21 +134,31 @@ export default function Home() {
 
       let gistsFoundCount = 0;
       const updatedFolders = folders.map(folder => {
-        const recipeNumber = parseInt(folder.id, 10);
-        if (isNaN(recipeNumber)) return folder;
+        let foundGist = null;
 
-        const searchPattern1 = new RegExp(`POO_Receita_0*${recipeNumber}`, 'i');
-        const searchPattern2 = new RegExp(`POO Receita 0*${recipeNumber}`, 'i');
-        const searchPattern3 = new RegExp(`Receita_0*${recipeNumber}`, 'i');
-        const searchPattern4 = new RegExp(`Receita 0*${recipeNumber}`, 'i');
-
-        const foundGist = userGists.find(gist =>
-          gist.description &&
-          (searchPattern1.test(gist.description) ||
-           searchPattern2.test(gist.description) ||
-           searchPattern3.test(gist.description) ||
-           searchPattern4.test(gist.description))
-        );
+        if (folder.id === 'mini-projeto') {
+          const miniProjectSearchTerms = ['Mini-Projeto', 'Mini Projeto'];
+          foundGist = userGists.find(gist =>
+            gist.description &&
+            miniProjectSearchTerms.some(term => new RegExp(term, 'i').test(gist.description))
+          );
+        } else {
+          const recipeNumber = parseInt(folder.id, 10);
+          if (!isNaN(recipeNumber)) { 
+            const searchPatterns = [
+              new RegExp(`POO_Receita_0*${recipeNumber}(?!\\d)`, 'i'),
+              new RegExp(`POO Receita 0*${recipeNumber}(?!\\d)`, 'i'),
+              new RegExp(`Receita_0*${recipeNumber}(?!\\d)`, 'i'),
+              new RegExp(`Receita 0*${recipeNumber}(?!\\d)`, 'i'),
+              new RegExp(`Receita\\s*${recipeNumber}(?!\\d)`, 'i') 
+            ];
+            
+            foundGist = userGists.find(gist =>
+              gist.description &&
+              searchPatterns.some(pattern => pattern.test(gist.description))
+            );
+          }
+        }
 
         if (foundGist && foundGist.html_url) {
           gistsFoundCount++;
@@ -224,7 +234,7 @@ export default function Home() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Seus Gists devem ter descrições como "POO_Receita_01", "POO Receita 1", etc.
+              Para receitas numeradas, use descrições como "POO_Receita_01" ou "Receita 1". Para o Mini-Projeto, use "Mini-Projeto" na descrição.
             </p>
           </div>
           <Button
@@ -240,7 +250,7 @@ export default function Home() {
 
       <main className="w-full max-w-4xl">
         {folders.length > 0 ? (
-          <ScrollArea className="h-[calc(100vh-28rem)] pr-4"> {/* Adjust height as needed */}
+          <ScrollArea className="h-[calc(100vh-30rem)] pr-4"> {/* Adjusted height slightly */}
             <div className="space-y-4">
               {folders.map(folder => (
                 <GitIntegrationCard
