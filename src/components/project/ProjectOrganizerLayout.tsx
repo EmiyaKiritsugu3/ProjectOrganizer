@@ -262,13 +262,13 @@ export default function ProjectOrganizerLayout() {
                       value={githubUsername} 
                       onChange={(e) => setGithubUsername(e.target.value)} 
                       placeholder="Seu usuário GitHub"
-                      className="h-8 text-xs bg-sidebar-background/50 border-sidebar-border focus:ring-sidebar-ring text-sidebar-foreground placeholder:text-sidebar-foreground/60" 
+                      className="h-8 text-xs bg-sidebar-background border-sidebar-foreground/40 focus:ring-sidebar-ring text-sidebar-foreground placeholder:text-sidebar-foreground/60" 
                     />
                     <Button 
                       onClick={handleAutoFillGists} 
                       size="sm" 
                       variant="outline" 
-                      className="whitespace-nowrap text-xs px-2 py-1 h-8 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:ring-sidebar-ring"
+                      className="whitespace-nowrap text-xs px-2 py-1 h-8 border-sidebar-foreground/40 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:ring-sidebar-ring"
                     >
                       <Search className="mr-1 h-3 w-3" />
                       Buscar
@@ -282,7 +282,7 @@ export default function ProjectOrganizerLayout() {
                   onClick={handleSaveAllFoldersToJson} 
                   variant="outline" 
                   size="sm" 
-                  className="w-full text-xs px-2 py-1 h-8 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:ring-sidebar-ring"
+                  className="w-full text-xs px-2 py-1 h-8 border-sidebar-foreground/40 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:ring-sidebar-ring"
                 >
                   <Download className="mr-1 h-3 w-3" />
                   Salvar Config. em JSON
@@ -335,5 +335,4 @@ export default function ProjectOrganizerLayout() {
     </SidebarProvider>
   );
 }
-
     
