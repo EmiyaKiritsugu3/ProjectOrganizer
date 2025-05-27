@@ -36,7 +36,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
     );
   }
   
-  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-flutter.html?run=true&id=${gistId}&theme=dark&split=40` : "";
+  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/?id=${gistId}&embed=true&run=true` : "";
 
   return (
     <ScrollArea className="h-full p-2 md:p-6">
@@ -83,7 +83,6 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
                       allow="clipboard-write"
                     ></iframe>
                   </div>
-                  {/* Mensagem estática quando o iframe está visível */}
                   <p className="text-xs text-muted-foreground mt-2">Tentando executar código automaticamente. Pode levar alguns segundos para carregar.</p>
                 </CardContent>
               </Card>
