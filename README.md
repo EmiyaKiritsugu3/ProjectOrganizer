@@ -78,10 +78,25 @@ A maneira mais fácil para seu professor e monitores acessarem seu projeto é ho
         2.  Faça o commit dessas alterações e envie-as para o seu repositório GitHub com `git push`.
     *   A plataforma de hospedagem (Vercel/Netlify) detectará automaticamente o `push`, fará um novo build do seu aplicativo com os dados atualizados e o publicará na mesma URL. Assim, seu professor sempre terá acesso à versão mais recente com todos os seus Gists.
 
+### Como as URLs dos Gists são Carregadas (Importante para o Aluno e Professor)
+
+*   **Fonte Principal (`src/data/folders.ts`)**: As URLs "oficiais" dos Gists para cada receita devem ser definidas por você (aluno) no arquivo `src/data/folders.ts`. Quando você envia essas alterações para o GitHub, a versão hospedada do aplicativo (e qualquer pessoa que execute o projeto a partir do seu código mais recente) usará essas URLs como base.
+*   **Conveniência do `localStorage` (Navegador do Usuário)**:
+    *   Quando qualquer usuário (você ou o professor) insere ou altera uma URL de Gist na interface, essa URL é salva no `localStorage` do navegador *desse usuário específico*. Isso é para conveniência, para que as URLs digitadas sejam lembradas entre as sessões *para aquele usuário*.
+    *   **Precedência**: Ao carregar o aplicativo:
+        1.  Se uma receita tiver uma URL de Gist definida no arquivo `src/data/folders.ts` (ou seja, não estiver vazia), essa URL do código **sempre será usada**, mesmo que o `localStorage` do usuário tenha uma URL diferente para essa receita. Isso garante que o professor veja a URL "oficial" que você definiu.
+        2.  Se uma receita no `src/data/folders.ts` tiver uma URL de Gist *vazia*, o aplicativo tentará carregar a URL do `localStorage` do usuário para essa receita, se existir.
+*   **O que acontece se o professor alterar uma URL?**:
+    *   A alteração é salva apenas no `localStorage` do navegador do professor.
+    *   **Não altera o código-fonte** do seu projeto no GitHub.
+    *   Se o professor alterar uma URL para uma receita que *você já havia definido* em `src/data/folders.ts`, na próxima vez que ele carregar a página (ou se você implantar uma atualização), a URL "oficial" do seu código será restaurada para ele.
+    *   Se o professor alterar uma URL para uma receita que você deixou *em branco* em `src/data/folders.ts`, a URL que ele inseriu será lembrada para ele em seu navegador.
+*   **Botão "Salvar em JSON"**: Este botão permite que qualquer usuário baixe um arquivo JSON com o estado *atual* das URLs visíveis na interface. Este é um backup local para o usuário e não afeta o código-fonte.
+
+Resumindo: Para garantir que seu professor veja os Gists corretos, preencha as URLs no arquivo `src/data/folders.ts`. As alterações que ele fizer na interface são locais para o navegador dele e não interferem na sua versão "oficial" do código.
+
 ### Informações Adicionais
 
-*   **URLs dos Gists**: As URLs dos Gists para cada receita estão pré-definidas no arquivo `src/data/folders.ts`. Se você (aluno) modificou este arquivo com suas próprias URLs de Gist e fez o `push` para o GitHub, essas serão as que o professor verá ao acessar a URL hospedada ou ao executar o projeto localmente a partir do seu código atualizado.
-*   **Persistência de Dados (LocalStorage)**: As URLs dos Gists inseridas na interface são salvas no `localStorage` do navegador do usuário. Isso é útil para o desenvolvimento local, mas não afeta o que o professor vê (ele verá o que está em `src/data/folders.ts` da versão que ele está executando ou acessando online).
 *   **DartPad Embutido**: A funcionalidade de visualização embutida do DartPad pode se comportar de maneira ligeiramente diferente em ambientes de preview (como o do Firebase Studio) em comparação com navegadores padrão ou a versão hospedada. Recomenda-se testar na versão hospedada ou em um navegador como Chrome ou Edge para a experiência completa.
 
 Seguindo a opção de hospedagem, seu professor terá acesso facilitado e sempre atualizado ao seu trabalho!
