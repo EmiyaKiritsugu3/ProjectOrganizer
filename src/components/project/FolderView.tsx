@@ -5,7 +5,10 @@ import type { AppFolder } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import GitIntegrationCard from "./GitIntegrationCard";
-import { FolderOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { extractGistId } from "@/lib/utils";
+import { FolderOpen, Eye, Code, PlayCircle, X } from "lucide-react";
+import { useState, useMemo } from "react";
 
 interface FolderViewProps {
   folder: AppFolder;
@@ -13,6 +16,16 @@ interface FolderViewProps {
 }
 
 export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) {
+  const [showEmbeddedDartPad, setShowEmbeddedDartPad] = useState(false);
+
+  const gistId = useMemo(() => extractGistId(folder.gitRepoUrl), [folder.gitRepoUrl]);
+
+  const toggleEmbeddedDartPad = () => {
+    if (gistId) {
+      setShowEmbeddedDartPad(!showEmbeddedDartPad);
+    }
+  };
+
   if (!folder) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
@@ -22,6 +35,8 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
       </div>
     );
   }
+  
+  const dartPadEmbedUrl = gistId ? `https://dartpad.dev/embed-dart.html?id=${gistId}&run=true&theme=dark&split=70` : "";
 
   return (
     <ScrollArea className="h-full p-2 md:p-6">
@@ -38,9 +53,39 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
           </CardHeader>
           <CardContent className="pt-6">
             <h3 className="text-xl font-semibold mb-2 text-foreground/90">Propósito Detalhado</h3>
-            <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">
+            <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap mb-6">
               {folder.longDescription}
             </p>
+
+            {gistId && (
+              <div className="mb-6">
+                <Button onClick={toggleEmbeddedDartPad} variant="outline" className="w-full sm:w-auto">
+                  {showEmbeddedDartPad ? <X className="mr-2 h-4 w-4" /> : <PlayCircle className="mr-2 h-4 w-4" />}
+                  {showEmbeddedDartPad ? "Fechar DartPad Embutido" : "Visualizar e Executar no DartPad Embutido"}
+                </Button>
+              </div>
+            )}
+
+            {showEmbeddedDartPad && gistId && (
+              <Card className="mb-6 shadow-md overflow-hidden">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Code className="h-5 w-5" /> DartPad Embutido
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <iframe
+                    src={dartPadEmbedUrl}
+                    style={{ width: '100%', height: '600px', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)' }}
+                    title={`DartPad Embutido para ${folder.name}`}
+                    allow="clipboard-write"
+                  ></iframe>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Código executando automaticamente. Pode levar alguns segundos para carregar.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </CardContent>
         </Card>
 
