@@ -257,7 +257,7 @@ export default function ProjectOrganizerLayout() {
                       value={githubUsername} 
                       onChange={(e) => setGithubUsername(e.target.value)} 
                       placeholder="Seu usuário GitHub"
-                      className="h-8 text-xs bg-sidebar-background border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground placeholder:opacity-60 focus:ring-sidebar-ring" 
+                      className="h-8 text-xs bg-sidebar border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground placeholder:opacity-60 focus:ring-sidebar-ring" 
                     />
                     <Button 
                       onClick={handleAutoFillGists} 
