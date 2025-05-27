@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import GitIntegrationCard from "./GitIntegrationCard";
 import { extractGistId } from "@/lib/utils";
 import { FolderOpen, Code } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 interface FolderViewProps {
   folder: AppFolder;
@@ -18,6 +18,11 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
   const [showEmbeddedDartPad, setShowEmbeddedDartPad] = useState(false);
 
   const gistId = useMemo(() => extractGistId(folder.gitRepoUrl), [folder.gitRepoUrl]);
+
+  // Reset showEmbeddedDartPad when folder changes
+  useEffect(() => {
+    setShowEmbeddedDartPad(false);
+  }, [folder.id]);
 
   const toggleEmbeddedDartPad = () => {
     if (gistId) {
@@ -66,6 +71,7 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
                 <CardContent>
                   <div className="aspect-video w-full overflow-hidden rounded-md border border-border bg-muted">
                     <iframe
+                      key={dartPadEmbedUrl} // Força o recarregamento do iframe quando a URL muda
                       src={dartPadEmbedUrl}
                       className="w-full h-full"
                       style={{ border: 0 }} 
@@ -95,5 +101,3 @@ export default function FolderView({ folder, onUpdateFolder }: FolderViewProps) 
     </ScrollArea>
   );
 }
-
-    
