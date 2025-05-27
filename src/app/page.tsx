@@ -143,21 +143,26 @@ export default function Home() {
             miniProjectSearchTerms.some(term => new RegExp(term, 'i').test(gist.description))
           );
         } else {
-          const recipeNumber = parseInt(folder.id, 10);
-          if (!isNaN(recipeNumber)) { 
-            const searchPatterns = [
-              new RegExp(`POO_Receita_0*${recipeNumber}(?!\\d)`, 'i'),
-              new RegExp(`POO Receita 0*${recipeNumber}(?!\\d)`, 'i'),
-              new RegExp(`Receita_0*${recipeNumber}(?!\\d)`, 'i'),
-              new RegExp(`Receita 0*${recipeNumber}(?!\\d)`, 'i'),
-              new RegExp(`Receita\\s*${recipeNumber}(?!\\d)`, 'i') 
-            ];
-            
-            foundGist = userGists.find(gist =>
-              gist.description &&
-              searchPatterns.some(pattern => pattern.test(gist.description))
-            );
+          const idForSearch = folder.id; // e.g., "01", "08a", "10b"
+          const searchRegexps: RegExp[] = [];
+
+          // Primary patterns using the idForSearch as is (e.g., "01", "08a", "10b")
+          searchRegexps.push(new RegExp(`POO[_\\s]?Receita[_\\s]?${idForSearch}(?!\\w)`, 'i'));
+          searchRegexps.push(new RegExp(`Receita[_\\s]?${idForSearch}(?!\\w)`, 'i'));
+
+          // If idForSearch is like "0X" (e.g., "01" to "09"), also search for non-padded version ("X")
+          if (/^0\d$/.test(idForSearch)) {
+            const numericIdNonPadded = parseInt(idForSearch, 10).toString(); // "01" -> "1"
+            if (numericIdNonPadded !== idForSearch) {
+              searchRegexps.push(new RegExp(`POO[_\\s]?Receita[_\\s]?${numericIdNonPadded}(?!\\w)`, 'i'));
+              searchRegexps.push(new RegExp(`Receita[_\\s]?${numericIdNonPadded}(?!\\w)`, 'i'));
+            }
           }
+          
+          foundGist = userGists.find(gist =>
+            gist.description &&
+            searchRegexps.some(pattern => pattern.test(gist.description))
+          );
         }
 
         if (foundGist && foundGist.html_url) {
@@ -210,9 +215,11 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="w-full max-w-4xl mb-6 p-6 bg-card rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-3 text-primary">Ferramentas de Gist</h2>
-        <div className="space-y-4">
+      <Card className="w-full max-w-4xl mb-6 p-6 shadow-md">
+        <CardHeader className="p-0 pb-4">
+          <CardTitle className="text-xl text-primary">Ferramentas de Gist</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0 space-y-4">
           <div>
             <Label htmlFor="githubUser" className="block text-sm font-medium text-foreground mb-1">
               Preencher Gists a partir do GitHub
@@ -234,7 +241,7 @@ export default function Home() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Para receitas numeradas, use descrições como "POO_Receita_01" ou "Receita 1". Para o Mini-Projeto, use "Mini-Projeto" na descrição.
+              Para receitas (ex: 01, 08a, 10b), use descrições como "POO Receita 01", "Receita 08a", "POO_Receita_10b". Para o Mini-Projeto, use "Mini-Projeto".
             </p>
           </div>
           <Button
@@ -245,8 +252,8 @@ export default function Home() {
             <Download className="mr-2 h-4 w-4" />
             Salvar Configuração Atual em JSON
           </Button>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
       <main className="w-full max-w-4xl">
         {folders.length > 0 ? (
@@ -262,11 +269,11 @@ export default function Home() {
             </div>
           </ScrollArea>
         ) : (
-          <div className="flex flex-col items-center justify-center text-muted-foreground p-10 rounded-lg bg-card shadow-lg">
+          <Card className="flex flex-col items-center justify-center text-muted-foreground p-10 shadow-lg">
             <ListX size={64} className="mb-4" />
             <p className="text-xl font-medium">Nenhuma receita para exibir.</p>
             <p className="text-sm">Verifique os dados iniciais ou tente buscar Gists do GitHub.</p>
-          </div>
+          </Card>
         )}
       </main>
       <Toaster />
