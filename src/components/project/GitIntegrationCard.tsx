@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, GitBranch, Loader2, RefreshCw, XCircle, AlertTriangle, FileCode, ExternalLink } from "lucide-react";
+import { CheckCircle2, Loader2, RefreshCw, XCircle, AlertTriangle, FileCode, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface GitIntegrationCardProps {
@@ -61,47 +61,56 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
     }
   };
 
-  const handleOpenInDartPad = (gistUrl: string) => {
-    if (!gistUrl.trim()) {
+  const extractGistId = (gistUrl: string): string | null => {
+    try {
+      const url = new URL(gistUrl);
+      // Check if it's a gist.github.com URL
+      if (url.hostname === 'gist.github.com') {
+        const pathParts = url.pathname.split('/');
+        // The Gist ID is usually the last part of the path
+        // e.g., /username/gist_id
+        return pathParts.pop() || null; 
+      }
+      // Handle direct Gist ID or other formats if necessary in the future
+      // For now, we assume it's a full gist.github.com URL or just the ID
+      const potentialId = gistUrl.substring(gistUrl.lastIndexOf('/') + 1);
+      if (potentialId.match(/^[0-9a-f]{32}$/i) || potentialId.match(/^[0-9a-f]{20}$/i)) { // Common Gist ID patterns
+        return potentialId;
+      }
+
+    } catch (error) {
+      // If it's not a valid URL, maybe it's just the ID
+      if (gistUrl.match(/^[0-9a-f]{32}$/i) || gistUrl.match(/^[0-9a-f]{20}$/i)) {
+        return gistUrl;
+      }
+      console.error("Error parsing Gist URL:", error);
+    }
+    return null;
+  };
+
+  const handleOpenInDartPad = (gistInput: string) => {
+    if (!gistInput.trim()) {
       toast({
-        title: "URL do Gist Ausente",
-        description: "Por favor, insira uma URL de Gist para abrir no DartPad.",
+        title: "URL ou ID do Gist Ausente",
+        description: "Por favor, insira uma URL ou ID de Gist para abrir no DartPad.",
         variant: "destructive",
       });
       return;
     }
 
-    try {
-      const url = new URL(gistUrl);
-      if (url.hostname !== 'gist.github.com') {
-        toast({
-          title: "URL Inválida",
-          description: "Por favor, insira uma URL válida do Gist (gist.github.com).",
-          variant: "destructive",
-        });
-        return;
-      }
-      const pathParts = url.pathname.split('/');
-      const gistId = pathParts.pop(); 
+    const gistId = extractGistId(gistInput);
 
-      if (!gistId) {
-        toast({
-          title: "ID do Gist Não Encontrado",
-          description: "Não foi possível extrair o ID do Gist da URL.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const dartPadUrl = `https://dartpad.dev/?id=${gistId}`;
-      window.open(dartPadUrl, '_blank', 'noopener,noreferrer');
-    } catch (error) {
+    if (!gistId) {
       toast({
-        title: "Erro ao Processar URL",
-        description: "A URL do Gist fornecida parece ser inválida. Verifique o formato.",
+        title: "ID do Gist Inválido",
+        description: "Não foi possível extrair um ID de Gist válido da entrada. Certifique-se de que é uma URL do Gist (gist.github.com) ou um ID de Gist.",
         variant: "destructive",
       });
+      return;
     }
+
+    const dartPadUrl = `https://dartpad.dev/${gistId}`;
+    window.open(dartPadUrl, '_blank', 'noopener,noreferrer');
   };
 
   const getStatusIcon = () => {
@@ -149,19 +158,19 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
           <CardTitle>Integração com Gist</CardTitle>
         </div>
         <CardDescription>
-          Opcionalmente, vincule uma URL de Gist para puxar o código para este app. Esta ferramenta nunca fará commit no seu Gist.
+          Opcionalmente, vincule uma URL de Gist ou ID para puxar o código para este app. Esta ferramenta nunca fará commit no seu Gist.
           Você também pode abrir Gists diretamente no DartPad.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
           <Label htmlFor={`gist-url-${folder.id}`} className="text-sm font-medium">
-            URL do Gist
+            URL ou ID do Gist
           </Label>
           <Input
             id={`gist-url-${folder.id}`}
-            type="url"
-            placeholder="https://gist.github.com/username/gist_id"
+            type="text"
+            placeholder="https://gist.github.com/username/gist_id ou apenas o gist_id"
             value={repoUrl}
             onChange={(e) => setRepoUrl(e.target.value)}
             className="mt-1"
@@ -169,7 +178,7 @@ export default function GitIntegrationCard({ folder, onUpdateFolder }: GitIntegr
            {!repoUrl.trim() && folder.gitSyncStatus !== 'unsynced' && folder.gitSyncStatus !== 'syncing' && (
              <p className="mt-2 text-xs text-destructive flex items-center gap-1">
                <AlertTriangle size={14} />
-               A URL do Gist é obrigatória para sincronização.
+               A URL ou ID do Gist é obrigatória para sincronização.
              </p>
            )}
         </div>
