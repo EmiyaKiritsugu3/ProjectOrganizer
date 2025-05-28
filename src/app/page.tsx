@@ -142,7 +142,7 @@ export default function Home() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `gists_${githubUsername || 'config'}.json`;
+    a.download = `gists_${githubUsername || 'aluno'}.json`; // Nome de arquivo mais genérico se não houver username
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -163,18 +163,18 @@ export default function Home() {
       const userGists = await fetchAllUserGists(githubUsername); 
 
       let gistsFoundCount = 0;
-      const updatedFolders = initialFolders.map(folder => { 
+      const updatedFolders = initialFolders.map(recipeFolder => { 
         let foundGist = null;
-        const originalFolderData = initialFolders.find(f => f.id === folder.id) || { ...folder, gitRepoUrl: '' };
+        let gistUrlForRecipe = '';
 
-        if (folder.id === 'mini-projeto') {
+        if (recipeFolder.id === 'mini-projeto') {
           const miniProjectSearchTerms = ['Mini-Projeto', 'Mini Projeto', 'Mini_Projeto'];
           foundGist = userGists.find(gist =>
             gist.description &&
             miniProjectSearchTerms.some(term => new RegExp(term, 'i').test(gist.description))
           );
         } else {
-          const idForSearch = folder.id; 
+          const idForSearch = recipeFolder.id; 
           const searchRegexps: RegExp[] = [];
           // Padrão principal: "POO Receita 01", "Receita 08a", "POO_Receita_10b"
           // O (?!\\w) no final garante que "Receita 1" não corresponda a "Receita 10"
@@ -185,7 +185,6 @@ export default function Home() {
           // também procura pela versão sem o zero (ex: "1" a "9").
           if (/^0\\d$/.test(idForSearch)) { 
             const numericIdNonPadded = parseInt(idForSearch, 10).toString();
-             // Evita regex duplicado se idForSearch já fosse, por exemplo, "1" (o que não deve acontecer com os IDs atuais)
             if (numericIdNonPadded !== idForSearch) {
               searchRegexps.push(new RegExp(`POO[_\\s]?Receita[_\\s]?${numericIdNonPadded}(?!\\w)`, 'i'));
               searchRegexps.push(new RegExp(`Receita[_\\s]?${numericIdNonPadded}(?!\\w)`, 'i'));
@@ -200,9 +199,9 @@ export default function Home() {
 
         if (foundGist && foundGist.html_url) {
           gistsFoundCount++;
-          return { ...originalFolderData, gitRepoUrl: foundGist.html_url };
+          gistUrlForRecipe = foundGist.html_url;
         }
-        return { ...originalFolderData, gitRepoUrl: '' }; // Garante que se não achar, a URL fica vazia
+        return { ...recipeFolder, gitRepoUrl: gistUrlForRecipe };
       });
 
       setFolders(updatedFolders); 
@@ -296,7 +295,7 @@ export default function Home() {
 
       <main className="w-full max-w-4xl">
         {folders.length > 0 ? (
-          <ScrollArea className="h-[calc(100vh-26rem)] sm:h-[calc(100vh-28rem)] pr-2 sm:pr-4"> {/* Adjusted height */}
+          <ScrollArea className="h-[calc(100vh-26rem)] sm:h-[calc(100vh-28rem)] pr-2 sm:pr-4">
             <div className="space-y-3 sm:space-y-4">
               {folders.map(folder => (
                 <GitIntegrationCard
@@ -319,4 +318,3 @@ export default function Home() {
     </div>
   );
 }
-
