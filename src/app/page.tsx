@@ -31,7 +31,7 @@ async function fetchAllUserGists(username: string): Promise<any[]> {
     
     const gistsOnPage = await response.json();
     if (!Array.isArray(gistsOnPage)) {
-         throw new Error("A resposta da API do GitHub não foi uma lista de Gists como esperado. Verifique o console do navegador para mais detalhes.");
+         throw new Error("A resposta da API do GitHub não retornou uma lista de Gists como esperado. Verifique o console do navegador para mais detalhes.");
     }
     allGists = allGists.concat(gistsOnPage);
 
@@ -64,8 +64,8 @@ export default function Home() {
 
   useEffect(() => {
     if (isClient) {
-      let processedFolders: AppFolder[];
-      const codeFolders = initialFolders.map(f => ({ ...f, gitRepoUrl: '' })); 
+      // Começa com as URLs de `initialFolders` (que devem estar vazias para novos usuários)
+      let processedFolders: AppFolder[] = initialFolders.map(f => ({ ...f, gitRepoUrl: '' })); 
 
       try {
         const storedFolderDataString = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -74,18 +74,24 @@ export default function Home() {
           const storedFolderUrls: Array<{ id: string; gitRepoUrl: string }> = JSON.parse(storedFolderDataString);
           const storedUrlsMap = new Map(storedFolderUrls.map(item => [item.id, item.gitRepoUrl]));
 
-          processedFolders = codeFolders.map(codeFolder => {
+          // Mescla com `initialFolders`, dando prioridade às URLs de `initialFolders` se elas não estiverem vazias.
+          // Se a URL em `initialFolders` estiver vazia, usa a do localStorage (se existir).
+          processedFolders = initialFolders.map(codeFolder => {
             const urlFromStorage = storedUrlsMap.get(codeFolder.id);
             return {
-              ...codeFolder,
-              gitRepoUrl: urlFromStorage !== undefined ? urlFromStorage : codeFolder.gitRepoUrl,
+              ...codeFolder, // Mantém nome, descrição, etc. de initialFolders
+              gitRepoUrl: codeFolder.gitRepoUrl || urlFromStorage || '', // Prioriza initialFolders, depois localStorage
             };
           });
         } else {
-          processedFolders = codeFolders;
+          // Se não houver nada no localStorage, usa initialFolders como está (com URLs vazias)
+          processedFolders = initialFolders.map(f => ({ ...f, gitRepoUrl: f.gitRepoUrl || '' }));
         }
         setFolders(processedFolders);
         
+        // Salva o estado inicial (possivelmente mesclado) de volta no localStorage
+        // Isso garante que, mesmo que o localStorage estivesse vazio, ele será populado
+        // com as URLs base (vazias ou preenchidas de initialFolders).
         const dataToStoreForLocalStorage = processedFolders.map(folder => ({
           id: folder.id,
           gitRepoUrl: folder.gitRepoUrl,
@@ -94,13 +100,15 @@ export default function Home() {
         
       } catch (error) {
         console.error("Falha ao carregar ou mesclar dados das pastas:", error);
-        const fallbackFolders = initialFolders.map(f => ({ ...f, gitRepoUrl: '' }));
+        // Em caso de erro, usa initialFolders diretamente, garantindo que as URLs base sejam usadas
+        const fallbackFolders = initialFolders.map(f => ({ ...f, gitRepoUrl: f.gitRepoUrl || '' }));
         setFolders(fallbackFolders);
       }
     }
   }, [isClient]); 
 
   useEffect(() => {
+    // Salva as alterações no localStorage sempre que `folders` mudar
     if (isClient && folders.length > 0) {
       try {
         const dataToStore = folders.map(folder => ({
@@ -153,41 +161,49 @@ export default function Home() {
       return;
     }
     toast({ title: "Buscando Gists...", description: `Procurando Gists para o aluno ${githubUsername}. Pode levar alguns segundos se o aluno tiver muitos Gists.` });
+    
     try {
       const userGists = await fetchAllUserGists(githubUsername); 
-
       let gistsFoundCount = 0;
+
       const updatedFolders = initialFolders.map(recipeFolder => { 
         let foundGist = null;
         let gistUrlForRecipe = ''; 
         let searchRegexps: RegExp[] = [];
+        
+        const recipeId = recipeFolder.id; // e.g., "01", "02", "08a", "mini-projeto"
+        // Escapa o ID da receita para uso seguro em regex
+        const escapedRecipeId = recipeId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 
-        if (recipeFolder.id === 'mini-projeto') {
+        if (recipeId === 'mini-projeto') {
           const miniProjectSearchTerms = ['Mini-Projeto', 'Mini Projeto', 'Mini_Projeto', 'POO Mini-Projeto', 'POO Mini Projeto'];
           foundGist = userGists.find(gist =>
             gist.description &&
             miniProjectSearchTerms.some(term => new RegExp(term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i').test(gist.description))
           );
         } else {
-          const idForSearch = recipeFolder.id; 
-          const escapedIdForSearch = idForSearch.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          // Padrão 1: Usando o ID exato da receita (e.g., "POO_Receita_02", "POO_Receita_08a")
+          searchRegexps.push(new RegExp(`POO[\\s_]?Receita[\\s_]?${escapedRecipeId}(?!\\w)`, 'i'));
+          searchRegexps.push(new RegExp(`Receita[\\s_]?${escapedRecipeId}(?!\\w)`, 'i'));
           
-          // Padrão principal: "POO Receita <ID>", "Receita <ID>"
-          searchRegexps.push(new RegExp(`POO[_\\s]?Receita[_\\s]?${escapedIdForSearch}(?!\\w)`, 'i'));
-          searchRegexps.push(new RegExp(`Receita[_\\s]?${escapedIdForSearch}(?!\\w)`, 'i'));
-          
-          // Se o ID for numérico de um dígito com zero à esquerda (ex: "01" a "09")
-          if (/^0\\d$/.test(idForSearch)) { 
-            const numericIdNonPadded = parseInt(idForSearch, 10).toString();
-            // Também procura pela versão sem o zero à esquerda (ex: "1" a "9")
-            searchRegexps.push(new RegExp(`POO[_\\s]?Receita[_\\s]?${numericIdNonPadded}(?!\\w)`, 'i'));
-            searchRegexps.push(new RegExp(`Receita[_\\s]?${numericIdNonPadded}(?!\\w)`, 'i'));
-            
-            // Também procura pela versão com dois zeros à esquerda (ex: "001" a "009")
-            searchRegexps.push(new RegExp(`POO[_\\s]?Receita[_\\s]?0${escapedIdForSearch}(?!\\w)`, 'i')); // e.g., POO_Receita_006
-            searchRegexps.push(new RegExp(`Receita[_\\s]?0${escapedIdForSearch}(?!\\w)`, 'i')); // e.g., Receita_006
+          // Lógica específica para IDs numéricos que podem ter diferentes formatações de padding
+          // Se o ID da receita é "0X" (e.g., recipeId === "02")
+          if (/^0[1-9]$/.test(recipeId)) { 
+              const num = parseInt(recipeId, 10); // Converte "02" para 2
+              const singleDigitId = num.toString(); // "2"
+              const doubleZeroPaddedId = `00${num}`; // "002"
+
+              // Adicionar busca por formato de dígito único (e.g., "POO Receita 2")
+              searchRegexps.push(new RegExp(`POO[\\s_]?Receita[\\s_]?${singleDigitId}(?!\\w)`, 'i'));
+              searchRegexps.push(new RegExp(`Receita[\\s_]?${singleDigitId}(?!\\w)`, 'i'));
+
+              // Adicionar busca por formato com dois zeros (e.g., "POO Receita 002")
+              searchRegexps.push(new RegExp(`POO[\\s_]?Receita[\\s_]?${doubleZeroPaddedId}(?!\\w)`, 'i'));
+              searchRegexps.push(new RegExp(`Receita[\\s_]?${doubleZeroPaddedId}(?!\\w)`, 'i'));
           }
-          
+          // Adicionar aqui mais `else if` para outros casos se necessário 
+          // (e.g. ids que são apenas "1" mas podem ser "01" ou "001" na descrição do Gist)
+
           foundGist = userGists.find(gist =>
             gist.description &&
             searchRegexps.some(pattern => pattern.test(gist.description))
@@ -198,12 +214,11 @@ export default function Home() {
           gistsFoundCount++;
           gistUrlForRecipe = foundGist.html_url;
         }
+        
+        // Mantém os dados de `initialFolders` e apenas atualiza `gitRepoUrl`
         return { 
-            id: recipeFolder.id,
-            name: recipeFolder.name,
-            description: recipeFolder.description,
-            longDescription: recipeFolder.longDescription,
-            gitRepoUrl: gistUrlForRecipe 
+            ...recipeFolder, // Usa nome, descrição, etc. de initialFolders
+            gitRepoUrl: gistUrlForRecipe || recipeFolder.gitRepoUrl || '' // Preenche se encontrado, senão mantém o que estava em initialFolders (que deve ser vazio para novos usuários)
         };
       });
 
@@ -323,3 +338,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
