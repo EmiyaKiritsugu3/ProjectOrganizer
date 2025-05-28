@@ -23,10 +23,11 @@ export const metadata: Metadata = {
     siteName: 'Project Organizer - Receitas POO',
     images: [
       {
-        url: 'https://placehold.co/1200x630.png', // Substitua pela URL da sua imagem Open Graph na pasta /public
+        url: 'https://placehold.co/1200x630.png', // Substitua pela URL da sua imagem Open Graph na pasta /public (ex: /rocket-og.png)
         width: 1200,
         height: 630,
-        alt: 'Project Organizer - Logo',
+        alt: 'Project Organizer - Ícone de Foguete',
+        'data-ai-hint': 'rocket launch'
       },
     ],
     locale: 'pt_BR',
