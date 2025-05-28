@@ -32,7 +32,7 @@ export default function GitIntegrationCard({
     onUpdateFolder({ id: folder.id, gitRepoUrl: newUrl });
   };
 
-  const handleOpenInDartPad = (gistInput: string) => {
+  const handleOpenGistInZapp = (gistInput: string) => {
     const gistId = extractGistId(gistInput);
 
     if (!gistId) {
@@ -43,9 +43,9 @@ export default function GitIntegrationCard({
       });
       return;
     }
-    // Append ?channel=beta to use the beta channel
-    const dartPadUrl = `https://dartpad.dev/${gistId}?channel=beta`;
-    window.open(dartPadUrl, '_blank', 'noopener,noreferrer');
+    
+    const zappRunUrl = `https://zapp.run/gist/${gistId}`;
+    window.open(zappRunUrl, '_blank', 'noopener,noreferrer');
   };
 
   const isValidGistInputForActions = !!extractGistId(repoUrl);
@@ -63,24 +63,24 @@ export default function GitIntegrationCard({
       <CardContent className="p-3 sm:p-4 pt-2">
         <div className="space-y-2">
           <div>
-            <Label htmlFor={`gist-url-${folder.id}`} className="text-xs font-medium text-card-foreground mb-1 block sr-only">
+            <Label htmlFor={`gist-url-${folder.id}`} className="text-xs font-medium text-card-foreground mb-1 block">
               URL / ID do Gist
             </Label>
             <div className="flex items-stretch gap-2">
               <Input
                 id={`gist-url-${folder.id}`}
                 type="text"
-                placeholder="URL ou ID do Gist"
+                placeholder="URL ou ID do Gist GitHub"
                 value={repoUrl}
                 onChange={(e) => handleUrlChange(e.target.value)}
                 className="flex-grow h-9 sm:h-10 text-sm sm:text-base bg-background text-foreground border-border placeholder:text-muted-foreground"
               />
               <Button
-                onClick={() => handleOpenInDartPad(repoUrl)}
+                onClick={() => handleOpenGistInZapp(repoUrl)}
                 disabled={!isValidGistInputForActions}
                 variant="outline"
                 className="border-primary text-primary hover:bg-primary hover:text-primary-foreground h-9 sm:h-10 px-3 sm:px-4"
-                aria-label="Abrir Gist no DartPad"
+                aria-label="Abrir Gist no Zapp.run"
                 size="default"
               >
                 <ExternalLink className="h-3.5 w-3.5 sm:mr-1.5" />

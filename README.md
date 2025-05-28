@@ -1,13 +1,13 @@
 
 # Project Organizer para Avaliação de Receitas de POO com Dart
 
-Este é um aplicativo Next.js desenvolvido para **Monitores** da disciplina de Programação Orientada a Objetos (POO) com Dart. Ele permite que os monitores insiram o nome de usuário GitHub de um aluno e visualizem os Gists correspondentes a cada "receita" (mini-tutorial) da disciplina. Os Gists podem ser abertos diretamente no DartPad a partir da interface.
+Este é um aplicativo Next.js desenvolvido para **Monitores** da disciplina de Programação Orientada a Objetos (POO) com Dart. Ele permite que os monitores insiram o nome de usuário GitHub de um aluno e visualizem os Gists correspondentes a cada "receita" (mini-tutorial) da disciplina. Os Gists podem ser abertos diretamente no **Zapp.run** a partir da interface.
 
 ## Para Alunos
 
-1.  **Crie seus Gists**: Para cada receita da disciplina, crie um Gist no GitHub contendo o código `main.dart`.
+1.  **Crie seus Gists**: Para cada receita da disciplina, crie um Gist no GitHub contendo o código `main.dart`. O Gist pode, opcionalmente, conter um arquivo `pubspec.yaml` (se não fornecido, o Zapp.run gerará um automaticamente).
 2.  **Nomeie seus Gists Corretamente**: Na **descrição** do seu Gist, utilize uma nomenclatura clara para que o Project Organizer possa encontrá-lo. Exemplos:
-    *   Para receitas numeradas (ex: 01, 02, 08a, 10b): "POO Receita 01", "Receita 08a", "POO_Receita_10b".
+    *   Para receitas numeradas (ex: 01, 02, 08a, 10b): "POO Receita 01", "Receita 08a", "POO_Receita_10b", "POO_Receita_004".
     *   Para o Mini-Projeto: "Mini-Projeto POO" ou "POO Mini Projeto".
 3.  **Forneça seu Nome de Usuário GitHub**: Informe seu nome de usuário GitHub aos monitores. Eles usarão o Project Organizer para acessar seus Gists.
 
@@ -40,10 +40,12 @@ Se você precisar executar o projeto localmente:
 3.  **Execute o Servidor de Desenvolvimento**:
     ```bash
     npm run dev
+    # ou
+    yarn dev
     ```
 
 4.  **Acesse no Navegador**:
-    Abra seu navegador e acesse: [http://localhost:9002](http://localhost:9002)
+    Abra seu navegador e acesse: [http://localhost:9002](http://localhost:9002) (ou a porta que `npm run dev` indicar).
 
 ### Utilizando a Ferramenta
 
@@ -52,7 +54,7 @@ Se você precisar executar o projeto localmente:
 3.  **Visualize e Abra os Gists**:
     *   As URLs dos Gists encontrados serão preenchidas nos campos correspondentes.
     *   Você pode editar manualmente qualquer URL, se necessário. Essas edições são salvas no `localStorage` do seu navegador para sua conveniência, caso precise reabrir para o mesmo aluno.
-    *   Clique no botão "Abrir" ao lado de uma URL para visualizar o Gist no DartPad em uma nova aba.
+    *   Clique no botão "Abrir" ao lado de uma URL para visualizar o Gist no Zapp.run em uma nova aba. O Zapp.run importará o Gist usando a URL `https://zapp.run/gist/<ID_DO_GIST>`.
 4.  **Salvar Configuração (Opcional)**: O botão "Salvar Gists do Aluno em JSON" permite baixar um arquivo JSON com as URLs dos Gists atualmente exibidas para o aluno.
 
 ## Para Desenvolvedores/Responsáveis pela Disciplina: Hospedagem Online
@@ -74,10 +76,9 @@ A maneira mais fácil para os monitores acessarem o Project Organizer é hospeda
 
 ### Como as URLs dos Gists são Carregadas (Importante para os Monitores)
 
-*   **Estrutura das Receitas (`src/data/folders.ts`)**: Este arquivo define os nomes e descrições de cada receita. As `gitRepoUrl` neste arquivo devem estar vazias.
+*   **Estrutura das Receitas (`src/data/folders.ts`)**: Este arquivo define os nomes e descrições de cada receita. As `gitRepoUrl` neste arquivo devem estar vazias (ex: `gitRepoUrl: ''`).
 *   **Busca Dinâmica**: Ao inserir o nome de usuário GitHub de um aluno e clicar em "Buscar Gists", o aplicativo busca os Gists desse aluno e preenche as URLs na interface.
 *   **Conveniência do `localStorage` (Navegador do Monitor)**:
     *   As URLs dos Gists do aluno buscado (ou qualquer URL que o monitor digite manualmente) são salvas no `localStorage` do navegador do monitor. Isso é para conveniência, para que, se o monitor fechar e reabrir o navegador para continuar avaliando o *mesmo aluno*, as URLs sejam lembradas.
     *   Ao buscar Gists de um *novo aluno*, as URLs desse novo aluno substituirão as anteriores na tela e no `localStorage`.
 *   **Botão "Salvar Gists do Aluno em JSON"**: Este botão permite que o monitor baixe um arquivo JSON com o estado *atual* das URLs visíveis na interface (para o aluno que está sendo avaliado). Este é um backup local para o monitor e não afeta o código-fonte do Project Organizer.
-```
