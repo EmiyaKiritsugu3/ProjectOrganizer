@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { AppFolder } from '@/types';
 import { initialFolders } from '@/data/folders';
 import GitIntegrationCard from '@/components/project/GitIntegrationCard';
@@ -9,12 +9,13 @@ import { Toaster } from '@/components/ui/toaster';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Download, Search, Rocket, ListX, Github } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
-const LOCAL_STORAGE_KEY = 'projectOrganizerFolderData_v2';
+const LOCAL_STORAGE_KEY = 'projectOrganizerFolderData_v2_EmiyaKiritsugu3'; // Make key specific if app defaults to one user
+const DEFAULT_GITHUB_USER = "EmiyaKiritsugu3";
 
 async function fetchAllUserGists(username: string): Promise<any[]> {
   let allGists: any[] = [];
@@ -36,7 +37,7 @@ async function fetchAllUserGists(username: string): Promise<any[]> {
     allGists = allGists.concat(gistsOnPage);
 
     const linkHeader = response.headers.get('Link');
-    nextPageUrl = null; // Reset for next iteration
+    nextPageUrl = null; 
     if (linkHeader) {
         const links = linkHeader.split(',');
         const nextLinkObj = links.find(link => link.includes('rel="next"'));
@@ -54,18 +55,104 @@ async function fetchAllUserGists(username: string): Promise<any[]> {
 
 export default function Home() {
   const { toast } = useToast();
-  const [folders, setFolders] = useState<AppFolder[]>([]);
+  const [folders, setFolders] = useState<AppFolder[]>(initialFolders.map(f => ({ ...f, gitRepoUrl: '' })));
   const [isClient, setIsClient] = useState(false);
-  const [githubUsername, setGithubUsername] = useState('');
+  const [githubUsername, setGithubUsername] = useState(DEFAULT_GITHUB_USER);
+  const [isLoadingGists, setIsLoadingGists] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  const handleAutoFillGists = useCallback(async (usernameToFetch: string) => {
+    if (!usernameToFetch.trim()) {
+      toast({ title: "Nome de Usuário Necessário", description: "Por favor, insira o nome de usuário GitHub do aluno.", variant: "destructive" });
+      return;
+    }
+    setIsLoadingGists(true);
+    toast({ title: "Buscando Gists...", description: `Procurando Gists para o aluno ${usernameToFetch}. Pode levar alguns segundos.` });
+    
+    try {
+      const userGists = await fetchAllUserGists(usernameToFetch); 
+      let gistsFoundCount = 0;
+
+      const updatedFolders = initialFolders.map(recipeFolder => {
+        let foundGist: any = null;
+        let gistUrlForRecipe = '';
+        const searchRegexps: RegExp[] = [];
+        
+        const recipeId = recipeFolder.id;
+        const escapedRecipeId = recipeId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
+        if (recipeId === 'mini-projeto') {
+          const miniProjectSearchTerms = ['Mini-Projeto', 'Mini Projeto', 'Mini_Projeto', 'POO Mini-Projeto', 'POO Mini Projeto'];
+          foundGist = userGists.find(gist =>
+            gist.description &&
+            miniProjectSearchTerms.some(term => new RegExp(term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i').test(gist.description))
+          );
+        } else {
+          searchRegexps.push(new RegExp(`POO[\\s_]?Receita[\\s_]?${escapedRecipeId}(?!\\w)`, 'i'));
+          searchRegexps.push(new RegExp(`Receita[\\s_]?${escapedRecipeId}(?!\\w)`, 'i'));
+          
+          if (/^0[1-9]$/.test(recipeId)) {
+            const num = parseInt(recipeId, 10);
+            const singleDigitId = num.toString();
+            const doubleZeroPaddedId = `00${num}`;
+
+            searchRegexps.push(new RegExp(`POO[\\s_]?Receita[\\s_]?${singleDigitId}(?!\\w)`, 'i'));
+            searchRegexps.push(new RegExp(`Receita[\\s_]?${singleDigitId}(?!\\w)`, 'i'));
+            searchRegexps.push(new RegExp(`POO[\\s_]?Receita[\\s_]?${doubleZeroPaddedId}(?!\\w)`, 'i'));
+            searchRegexps.push(new RegExp(`Receita[\\s_]?${doubleZeroPaddedId}(?!\\w)`, 'i'));
+          }
+        }
+
+        if (!foundGist && recipeId !== 'mini-projeto') {
+            foundGist = userGists.find(gist =>
+                gist.description &&
+                searchRegexps.some(pattern => pattern.test(gist.description))
+            );
+        }
+        
+        if (foundGist && foundGist.html_url) {
+          gistsFoundCount++;
+          gistUrlForRecipe = foundGist.html_url;
+        }
+        
+        const currentFolderData = folders.find(f => f.id === recipeFolder.id);
+        return { 
+            ...recipeFolder, 
+            gitRepoUrl: gistUrlForRecipe || (currentFolderData?.gitRepoUrl || '')
+        };
+      });
+
+      setFolders(updatedFolders); 
+      toast({
+        title: "Busca de Gists Concluída",
+        description: `${gistsFoundCount} Gist(s) encontrados para ${usernameToFetch} e URLs preenchidas. As alterações foram salvas localmente no navegador.`,
+      });
+
+    } catch (error: any) {
+      console.error("Erro ao buscar Gists:", error);
+      let errorMessage = "Ocorreu um erro desconhecido ao buscar os Gists.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      toast({
+        title: "Erro na Busca de Gists",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingGists(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toast]); // folders removed from deps to avoid re-fetch on folder update
+
   useEffect(() => {
     if (isClient) {
-      let processedFolders: AppFolder[] = initialFolders.map(f => ({ ...f, gitRepoUrl: '' })); 
-
+      let processedFolders: AppFolder[];
       try {
         const storedFolderDataString = localStorage.getItem(LOCAL_STORAGE_KEY);
         
@@ -81,23 +168,33 @@ export default function Home() {
             };
           });
         } else {
+          // If no localStorage, start with initialFolders (which have empty URLs by default)
           processedFolders = initialFolders.map(f => ({ ...f, gitRepoUrl: f.gitRepoUrl || '' }));
         }
         setFolders(processedFolders);
         
-        const dataToStoreForLocalStorage = processedFolders.map(folder => ({
-          id: folder.id,
-          gitRepoUrl: folder.gitRepoUrl,
-        }));
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToStoreForLocalStorage));
+        // Auto-fetch gists for the default user if no specific data was in local storage
+        // or if the data in local storage wasn't for the default user (more complex check needed for that).
+        // For simplicity, if username is DEFAULT_GITHUB_USER, trigger fetch.
+        // The fetch itself will then update localStorage.
+        if (githubUsername === DEFAULT_GITHUB_USER) {
+          // Check if localStorage was empty or didn't meaningfully populate folders
+          const isLocalStorageEmptyOrIrrelevant = !storedFolderDataString || processedFolders.every(f => !f.gitRepoUrl);
+          if (isLocalStorageEmptyOrIrrelevant) {
+             handleAutoFillGists(DEFAULT_GITHUB_USER);
+          }
+        }
         
       } catch (error) {
         console.error("Falha ao carregar ou mesclar dados das pastas:", error);
-        const fallbackFolders = initialFolders.map(f => ({ ...f, gitRepoUrl: f.gitRepoUrl || '' }));
-        setFolders(fallbackFolders);
+        setFolders(initialFolders.map(f => ({ ...f, gitRepoUrl: f.gitRepoUrl || '' })));
+        if (githubUsername === DEFAULT_GITHUB_USER) {
+          handleAutoFillGists(DEFAULT_GITHUB_USER);
+        }
       }
     }
-  }, [isClient]); 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isClient]); // Removed handleAutoFillGists, githubUsername to control initial fetch carefully
 
   useEffect(() => {
     if (isClient && folders.length > 0) {
@@ -145,90 +242,14 @@ export default function Home() {
       description: `Os dados das receitas do aluno ${githubUsername || 'atual'} foram salvos em ${a.download}.`,
     });
   };
-
-  const handleAutoFillGists = async () => {
-    if (!githubUsername.trim()) {
-      toast({ title: "Nome de Usuário Necessário", description: "Por favor, insira o nome de usuário GitHub do aluno.", variant: "destructive" });
-      return;
-    }
-    toast({ title: "Buscando Gists...", description: `Procurando Gists para o aluno ${githubUsername}. Pode levar alguns segundos se o aluno tiver muitos Gists.` });
-    
-    try {
-      const userGists = await fetchAllUserGists(githubUsername); 
-      let gistsFoundCount = 0;
-
-      const updatedFolders = initialFolders.map(recipeFolder => { 
-        let foundGist = null;
-        let gistUrlForRecipe = ''; 
-        const searchRegexps: RegExp[] = [];
-        
-        const recipeId = recipeFolder.id; 
-        const escapedRecipeId = recipeId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-
-        if (recipeId === 'mini-projeto') {
-          const miniProjectSearchTerms = ['Mini-Projeto', 'Mini Projeto', 'Mini_Projeto', 'POO Mini-Projeto', 'POO Mini Projeto'];
-          foundGist = userGists.find(gist =>
-            gist.description &&
-            miniProjectSearchTerms.some(term => new RegExp(term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i').test(gist.description))
-          );
-        } else {
-          searchRegexps.push(new RegExp(`POO[\\s_]?Receita[\\s_]?${escapedRecipeId}(?!\\w)`, 'i'));
-          searchRegexps.push(new RegExp(`Receita[\\s_]?${escapedRecipeId}(?!\\w)`, 'i'));
-          
-          if (/^0[1-9]$/.test(recipeId)) { 
-              const num = parseInt(recipeId, 10); 
-              const singleDigitId = num.toString(); 
-              const doubleZeroPaddedId = `00${num}`; 
-
-              searchRegexps.push(new RegExp(`POO[\\s_]?Receita[\\s_]?${singleDigitId}(?!\\w)`, 'i'));
-              searchRegexps.push(new RegExp(`Receita[\\s_]?${singleDigitId}(?!\\w)`, 'i'));
-
-              searchRegexps.push(new RegExp(`POO[\\s_]?Receita[\\s_]?${doubleZeroPaddedId}(?!\\w)`, 'i'));
-              searchRegexps.push(new RegExp(`Receita[\\s_]?${doubleZeroPaddedId}(?!\\w)`, 'i'));
-          }
-
-          foundGist = userGists.find(gist =>
-            gist.description &&
-            searchRegexps.some(pattern => pattern.test(gist.description))
-          );
-        }
-
-        if (foundGist && foundGist.html_url) {
-          gistsFoundCount++;
-          gistUrlForRecipe = foundGist.html_url;
-        }
-        
-        return { 
-            ...recipeFolder, 
-            gitRepoUrl: gistUrlForRecipe || recipeFolder.gitRepoUrl || '' 
-        };
-      });
-
-      setFolders(updatedFolders); 
-      toast({
-        title: "Busca de Gists Concluída",
-        description: `${gistsFoundCount} Gist(s) encontrados para ${githubUsername} e URLs preenchidas. As alterações foram salvas localmente no navegador.`,
-      });
-
-    } catch (error: any) {
-      console.error("Erro ao buscar Gists:", error);
-      let errorMessage = "Ocorreu um erro desconhecido ao buscar os Gists.";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-      toast({
-        title: "Erro na Busca de Gists",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    }
+  
+  const triggerAutoFill = () => {
+    handleAutoFillGists(githubUsername);
   };
-
+  
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    handleAutoFillGists();
+    triggerAutoFill();
   };
 
   if (!isClient) {
@@ -273,16 +294,17 @@ export default function Home() {
                     id="githubUser"
                     value={githubUsername}
                     onChange={(e) => setGithubUsername(e.target.value)}
-                    placeholder="Digite o nome de usuário GitHub do aluno"
+                    placeholder="Nome de usuário GitHub do Aluno"
                     className="flex-grow bg-background text-foreground border-border placeholder:text-muted-foreground h-9 sm:h-10 text-sm sm:text-base"
                   />
                   <Button
                     type="submit"
                     className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 sm:h-10 px-3 sm:px-4"
                     size="default"
+                    disabled={isLoadingGists}
                   >
                     <Search className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    <span className="text-xs sm:text-sm">Buscar Gists</span>
+                    <span className="text-xs sm:text-sm">{isLoadingGists ? "Buscando..." : "Buscar Gists"}</span>
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1.5">
@@ -294,7 +316,7 @@ export default function Home() {
                 variant="outline"
                 className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground h-9 sm:h-10"
                 size="default"
-                disabled={!folders.some(f => f.gitRepoUrl.trim() !== "")}
+                disabled={!folders.some(f => f.gitRepoUrl.trim() !== "") || isLoadingGists}
               >
                 <Download className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span className="text-xs sm:text-sm">Salvar Gists do Aluno em JSON</span>
@@ -306,13 +328,14 @@ export default function Home() {
 
       <main className="w-full max-w-4xl">
         {folders.length > 0 ? (
-          <ScrollArea className="h-[calc(100vh-26rem)] sm:h-[calc(100vh-28rem)] pr-2 sm:pr-4"> {/* Ajuste a altura conforme necessário */}
+          <ScrollArea className="h-[calc(100vh-26rem)] sm:h-[calc(100vh-28rem)] pr-2 sm:pr-4">
             <div className="space-y-3 sm:space-y-4">
               {folders.map(folder => (
                 <GitIntegrationCard
                   key={folder.id}
                   folder={folder}
                   onUpdateFolder={handleUpdateFolder}
+                  isLoading={isLoadingGists}
                 />
               ))}
             </div>

@@ -14,11 +14,13 @@ import { useState, useEffect } from "react";
 interface GitIntegrationCardProps {
   folder: AppFolder;
   onUpdateFolder: (updatedFolder: Pick<AppFolder, 'id' | 'gitRepoUrl'>) => void;
+  isLoading?: boolean;
 }
 
 export default function GitIntegrationCard({
   folder,
   onUpdateFolder,
+  isLoading,
 }: GitIntegrationCardProps) {
   const { toast } = useToast();
   const [repoUrl, setRepoUrl] = useState(folder.gitRepoUrl);
@@ -74,10 +76,11 @@ export default function GitIntegrationCard({
                 value={repoUrl}
                 onChange={(e) => handleUrlChange(e.target.value)}
                 className="flex-grow h-9 sm:h-10 text-sm sm:text-base bg-background text-foreground border-border placeholder:text-muted-foreground"
+                disabled={isLoading}
               />
               <Button
                 onClick={() => handleOpenGistInZapp(repoUrl)}
-                disabled={!isValidGistInputForActions}
+                disabled={!isValidGistInputForActions || isLoading}
                 variant="outline"
                 className="border-primary text-primary hover:bg-primary hover:text-primary-foreground h-9 sm:h-10 px-3 sm:px-4"
                 aria-label="Abrir Gist no Zapp.run"
