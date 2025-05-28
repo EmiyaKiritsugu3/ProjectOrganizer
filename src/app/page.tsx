@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -11,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Download, Search, Rocket, ListX } from 'lucide-react';
+import { Download, Search, Rocket, ListX, Github } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
 const LOCAL_STORAGE_KEY = 'projectOrganizerFolderData_v2';
@@ -31,16 +30,15 @@ export default function Home() {
       let processedFolders: AppFolder[];
       try {
         const storedFolderDataString = localStorage.getItem(LOCAL_STORAGE_KEY);
-        const codeFolders = initialFolders.map(f => ({ ...f }));
+        const codeFolders = initialFolders.map(f => ({ ...f })); // initialFolders has empty gitRepoUrl
 
         if (storedFolderDataString) {
           const storedFolderUrls: Array<{ id: string; gitRepoUrl: string }> = JSON.parse(storedFolderDataString);
           const storedUrlsMap = new Map(storedFolderUrls.map(item => [item.id, item.gitRepoUrl]));
 
           processedFolders = codeFolders.map(codeFolder => {
-            if (codeFolder.gitRepoUrl && codeFolder.gitRepoUrl.trim() !== "") {
-              return { ...codeFolder };
-            }
+            // Since codeFolder.gitRepoUrl is always empty from initialFolders for a fresh load by a monitor,
+            // this will prioritize localStorage if it exists (e.g., monitor was looking at a student's gists before).
             const urlFromStorage = storedUrlsMap.get(codeFolder.id);
             return {
               ...codeFolder,
@@ -48,10 +46,13 @@ export default function Home() {
             };
           });
         } else {
+          // Nothing in storage, so use initialFolders (all empty URLs)
           processedFolders = codeFolders;
         }
         setFolders(processedFolders);
-
+        
+        // Save the possibly merged state back to localStorage.
+        // This means if localStorage was populated, it remains, otherwise, empty URLs are saved.
         const dataToStoreForLocalStorage = processedFolders.map(folder => ({
           id: folder.id,
           gitRepoUrl: folder.gitRepoUrl,
@@ -67,6 +68,8 @@ export default function Home() {
   }, [isClient]);
 
   useEffect(() => {
+    // This effect ensures that any update to the 'folders' state (e.g., after fetching Gists)
+    // is persisted to localStorage.
     if (isClient && folders.length > 0) {
       try {
         const dataToStore = folders.map(folder => ({
@@ -101,28 +104,28 @@ export default function Home() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'project_organizer_config.json';
+    a.download = `gists_${githubUsername || 'config'}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     toast({
       title: "Configuração Salva",
-      description: "Os dados de todas as receitas foram salvos em project_organizer_config.json.",
+      description: `Os dados das receitas do aluno ${githubUsername || 'atual'} foram salvos em ${a.download}.`,
     });
   };
 
   const handleAutoFillGists = async () => {
     if (!githubUsername.trim()) {
-      toast({ title: "Nome de Usuário Necessário", description: "Por favor, insira seu nome de usuário do GitHub.", variant: "destructive" });
+      toast({ title: "Nome de Usuário Necessário", description: "Por favor, insira o nome de usuário GitHub do aluno.", variant: "destructive" });
       return;
     }
-    toast({ title: "Buscando Gists...", description: `Procurando Gists para o usuário ${githubUsername}.` });
+    toast({ title: "Buscando Gists...", description: `Procurando Gists para o aluno ${githubUsername}.` });
     try {
       const response = await fetch(`https://api.github.com/users/${githubUsername}/gists`);
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error(`Usuário do GitHub "${githubUsername}" não encontrado.`);
+          throw new Error(`Aluno do GitHub "${githubUsername}" não encontrado.`);
         }
         throw new Error(`Erro ao buscar Gists: ${response.status} ${response.statusText}`);
       }
@@ -133,8 +136,10 @@ export default function Home() {
       }
 
       let gistsFoundCount = 0;
-      const updatedFolders = folders.map(folder => {
+      const updatedFolders = initialFolders.map(folder => { // Start from a clean slate of recipes
         let foundGist = null;
+        const originalFolderData = initialFolders.find(f => f.id === folder.id) || folder;
+
 
         if (folder.id === 'mini-projeto') {
           const miniProjectSearchTerms = ['Mini-Projeto', 'Mini Projeto'];
@@ -143,16 +148,12 @@ export default function Home() {
             miniProjectSearchTerms.some(term => new RegExp(term, 'i').test(gist.description))
           );
         } else {
-          const idForSearch = folder.id; // e.g., "01", "08a", "10b"
+          const idForSearch = folder.id; 
           const searchRegexps: RegExp[] = [];
-
-          // Primary patterns using the idForSearch as is (e.g., "01", "08a", "10b")
           searchRegexps.push(new RegExp(`POO[_\\s]?Receita[_\\s]?${idForSearch}(?!\\w)`, 'i'));
           searchRegexps.push(new RegExp(`Receita[_\\s]?${idForSearch}(?!\\w)`, 'i'));
-
-          // If idForSearch is like "0X" (e.g., "01" to "09"), also search for non-padded version ("X")
-          if (/^0\d$/.test(idForSearch)) {
-            const numericIdNonPadded = parseInt(idForSearch, 10).toString(); // "01" -> "1"
+          if (/^0\\d$/.test(idForSearch)) {
+            const numericIdNonPadded = parseInt(idForSearch, 10).toString();
             if (numericIdNonPadded !== idForSearch) {
               searchRegexps.push(new RegExp(`POO[_\\s]?Receita[_\\s]?${numericIdNonPadded}(?!\\w)`, 'i'));
               searchRegexps.push(new RegExp(`Receita[_\\s]?${numericIdNonPadded}(?!\\w)`, 'i'));
@@ -167,15 +168,16 @@ export default function Home() {
 
         if (foundGist && foundGist.html_url) {
           gistsFoundCount++;
-          return { ...folder, gitRepoUrl: foundGist.html_url };
+          return { ...originalFolderData, gitRepoUrl: foundGist.html_url };
         }
-        return folder;
+        // If no gist found for this recipe, return the original recipe structure with an empty URL
+        return { ...originalFolderData, gitRepoUrl: '' };
       });
 
-      setFolders(updatedFolders);
+      setFolders(updatedFolders); // This will trigger the useEffect to save to localStorage
       toast({
         title: "Busca de Gists Concluída",
-        description: `${gistsFoundCount} Gist(s) encontrados e URLs correspondentes foram preenchidas. As alterações foram salvas localmente.`,
+        description: `${gistsFoundCount} Gist(s) encontrados para ${githubUsername} e URLs preenchidas. As alterações foram salvas localmente no navegador.`,
       });
 
     } catch (error) {
@@ -209,28 +211,31 @@ export default function Home() {
             <div>
                 <h1 className="text-3xl font-bold text-primary">Project Organizer - Receitas POO</h1>
                 <p className="text-md text-muted-foreground">
-                Gerencie e acesse seus Gists de receitas de Programação Orientada a Objetos com Dart.
+                Ferramenta para Monitores: Visualize Gists de receitas de POO dos alunos.
                 </p>
             </div>
         </div>
       </header>
 
-      <Card className="w-full max-w-4xl mb-6 p-6 shadow-md">
+      <Card className="w-full max-w-4xl mb-6 p-6 shadow-md bg-card">
         <CardHeader className="p-0 pb-4">
-          <CardTitle className="text-xl text-primary">Ferramentas de Gist</CardTitle>
+          <CardTitle className="text-xl text-primary-foreground flex items-center gap-2">
+            <Github className="h-6 w-6" />
+            Buscar Gists do Aluno
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0 space-y-4">
           <div>
-            <Label htmlFor="githubUser" className="block text-sm font-medium text-foreground mb-1">
-              Preencher Gists a partir do GitHub
+            <Label htmlFor="githubUser" className="block text-sm font-medium text-primary-foreground mb-1">
+              Nome de Usuário GitHub do Aluno
             </Label>
             <div className="flex items-stretch gap-2">
               <Input
                 id="githubUser"
                 value={githubUsername}
                 onChange={(e) => setGithubUsername(e.target.value)}
-                placeholder="Seu nome de usuário do GitHub"
-                className="flex-grow"
+                placeholder="Digite o nome de usuário GitHub do aluno"
+                className="flex-grow bg-background text-foreground border-border placeholder:text-muted-foreground"
               />
               <Button
                 onClick={handleAutoFillGists}
@@ -241,23 +246,24 @@ export default function Home() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Para receitas (ex: 01, 08a, 10b), use descrições como "POO Receita 01", "Receita 08a", "POO_Receita_10b". Para o Mini-Projeto, use "Mini-Projeto".
+              O aluno deve nomear seus Gists seguindo o padrão: "POO Receita 01", "Receita 08a", "Mini-Projeto", etc.
             </p>
           </div>
           <Button
             onClick={handleSaveAllFoldersToJson}
             variant="outline"
-            className="w-full"
+            className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+            disabled={!folders.some(f => f.gitRepoUrl.trim() !== "")}
           >
             <Download className="mr-2 h-4 w-4" />
-            Salvar Configuração Atual em JSON
+            Salvar Gists do Aluno em JSON
           </Button>
         </CardContent>
       </Card>
 
       <main className="w-full max-w-4xl">
         {folders.length > 0 ? (
-          <ScrollArea className="h-[calc(100vh-30rem)] pr-4"> {/* Adjusted height slightly */}
+          <ScrollArea className="h-[calc(100vh-32rem)] pr-4"> {/* Adjusted height slightly */}
             <div className="space-y-4">
               {folders.map(folder => (
                 <GitIntegrationCard
@@ -269,10 +275,10 @@ export default function Home() {
             </div>
           </ScrollArea>
         ) : (
-          <Card className="flex flex-col items-center justify-center text-muted-foreground p-10 shadow-lg">
+          <Card className="flex flex-col items-center justify-center text-muted-foreground p-10 shadow-lg bg-card">
             <ListX size={64} className="mb-4" />
             <p className="text-xl font-medium">Nenhuma receita para exibir.</p>
-            <p className="text-sm">Verifique os dados iniciais ou tente buscar Gists do GitHub.</p>
+            <p className="text-sm">Insira o nome de usuário GitHub do aluno e clique em "Buscar Gists".</p>
           </Card>
         )}
       </main>
