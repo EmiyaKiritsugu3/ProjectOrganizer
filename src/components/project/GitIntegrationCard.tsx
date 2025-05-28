@@ -43,26 +43,27 @@ export default function GitIntegrationCard({
       });
       return;
     }
-    const dartPadUrl = `https://dartpad.dev/${gistId}`; // Removed ?run=true
+    // Append ?channel=beta to use the beta channel
+    const dartPadUrl = `https://dartpad.dev/${gistId}?channel=beta`;
     window.open(dartPadUrl, '_blank', 'noopener,noreferrer');
   };
 
   const isValidGistInputForActions = !!extractGistId(repoUrl);
 
   return (
-    <Card className="w-full shadow-md hover:shadow-lg transition-shadow">
-      <CardHeader className="p-4 pb-2">
-        <CardTitle className="text-lg font-semibold text-primary">{folder.name}</CardTitle>
+    <Card className="w-full shadow-md hover:shadow-lg transition-shadow bg-card">
+      <CardHeader className="p-3 sm:p-4 pb-2">
+        <CardTitle className="text-md sm:text-lg font-semibold text-card-foreground">{folder.name}</CardTitle>
          {folder.description && (
-            <CardDescription className="text-xs text-muted-foreground mt-1">
+            <CardDescription className="text-xs text-muted-foreground mt-0.5">
                 {folder.description}
             </CardDescription>
         )}
       </CardHeader>
-      <CardContent className="p-4 pt-2">
-        <div className="space-y-3"> {/* Adjusted from space-y-2 for consistency with previous state if any */}
+      <CardContent className="p-3 sm:p-4 pt-2">
+        <div className="space-y-2">
           <div>
-            <Label htmlFor={`gist-url-${folder.id}`} className="text-sm font-medium text-foreground mb-1 block sr-only">
+            <Label htmlFor={`gist-url-${folder.id}`} className="text-xs font-medium text-card-foreground mb-1 block sr-only">
               URL / ID do Gist
             </Label>
             <div className="flex items-stretch gap-2">
@@ -72,17 +73,18 @@ export default function GitIntegrationCard({
                 placeholder="URL ou ID do Gist"
                 value={repoUrl}
                 onChange={(e) => handleUrlChange(e.target.value)}
-                className="flex-grow"
+                className="flex-grow h-9 sm:h-10 text-sm sm:text-base bg-background text-foreground border-border placeholder:text-muted-foreground"
               />
               <Button
                 onClick={() => handleOpenInDartPad(repoUrl)}
                 disabled={!isValidGistInputForActions}
                 variant="outline"
-                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground h-9 sm:h-10 px-3 sm:px-4"
                 aria-label="Abrir Gist no DartPad"
+                size="default"
               >
-                <ExternalLink className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Abrir</span>
+                <ExternalLink className="h-3.5 w-3.5 sm:mr-1.5" />
+                <span className="hidden sm:inline text-xs sm:text-sm">Abrir</span>
               </Button>
             </div>
             {!isValidGistInputForActions && repoUrl.trim() !== "" && (
