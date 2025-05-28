@@ -64,7 +64,6 @@ export default function Home() {
 
   useEffect(() => {
     if (isClient) {
-      // Começa com as URLs de `initialFolders` (que devem estar vazias para novos usuários)
       let processedFolders: AppFolder[] = initialFolders.map(f => ({ ...f, gitRepoUrl: '' })); 
 
       try {
@@ -74,24 +73,18 @@ export default function Home() {
           const storedFolderUrls: Array<{ id: string; gitRepoUrl: string }> = JSON.parse(storedFolderDataString);
           const storedUrlsMap = new Map(storedFolderUrls.map(item => [item.id, item.gitRepoUrl]));
 
-          // Mescla com `initialFolders`, dando prioridade às URLs de `initialFolders` se elas não estiverem vazias.
-          // Se a URL em `initialFolders` estiver vazia, usa a do localStorage (se existir).
           processedFolders = initialFolders.map(codeFolder => {
             const urlFromStorage = storedUrlsMap.get(codeFolder.id);
             return {
-              ...codeFolder, // Mantém nome, descrição, etc. de initialFolders
-              gitRepoUrl: codeFolder.gitRepoUrl || urlFromStorage || '', // Prioriza initialFolders, depois localStorage
+              ...codeFolder, 
+              gitRepoUrl: codeFolder.gitRepoUrl || urlFromStorage || '', 
             };
           });
         } else {
-          // Se não houver nada no localStorage, usa initialFolders como está (com URLs vazias)
           processedFolders = initialFolders.map(f => ({ ...f, gitRepoUrl: f.gitRepoUrl || '' }));
         }
         setFolders(processedFolders);
         
-        // Salva o estado inicial (possivelmente mesclado) de volta no localStorage
-        // Isso garante que, mesmo que o localStorage estivesse vazio, ele será populado
-        // com as URLs base (vazias ou preenchidas de initialFolders).
         const dataToStoreForLocalStorage = processedFolders.map(folder => ({
           id: folder.id,
           gitRepoUrl: folder.gitRepoUrl,
@@ -100,7 +93,6 @@ export default function Home() {
         
       } catch (error) {
         console.error("Falha ao carregar ou mesclar dados das pastas:", error);
-        // Em caso de erro, usa initialFolders diretamente, garantindo que as URLs base sejam usadas
         const fallbackFolders = initialFolders.map(f => ({ ...f, gitRepoUrl: f.gitRepoUrl || '' }));
         setFolders(fallbackFolders);
       }
@@ -108,7 +100,6 @@ export default function Home() {
   }, [isClient]); 
 
   useEffect(() => {
-    // Salva as alterações no localStorage sempre que `folders` mudar
     if (isClient && folders.length > 0) {
       try {
         const dataToStore = folders.map(folder => ({
@@ -169,10 +160,9 @@ export default function Home() {
       const updatedFolders = initialFolders.map(recipeFolder => { 
         let foundGist = null;
         let gistUrlForRecipe = ''; 
-        let searchRegexps: RegExp[] = [];
+        const searchRegexps: RegExp[] = [];
         
-        const recipeId = recipeFolder.id; // e.g., "01", "02", "08a", "mini-projeto"
-        // Escapa o ID da receita para uso seguro em regex
+        const recipeId = recipeFolder.id; 
         const escapedRecipeId = recipeId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 
         if (recipeId === 'mini-projeto') {
@@ -182,27 +172,20 @@ export default function Home() {
             miniProjectSearchTerms.some(term => new RegExp(term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i').test(gist.description))
           );
         } else {
-          // Padrão 1: Usando o ID exato da receita (e.g., "POO_Receita_02", "POO_Receita_08a")
           searchRegexps.push(new RegExp(`POO[\\s_]?Receita[\\s_]?${escapedRecipeId}(?!\\w)`, 'i'));
           searchRegexps.push(new RegExp(`Receita[\\s_]?${escapedRecipeId}(?!\\w)`, 'i'));
           
-          // Lógica específica para IDs numéricos que podem ter diferentes formatações de padding
-          // Se o ID da receita é "0X" (e.g., recipeId === "02")
           if (/^0[1-9]$/.test(recipeId)) { 
-              const num = parseInt(recipeId, 10); // Converte "02" para 2
-              const singleDigitId = num.toString(); // "2"
-              const doubleZeroPaddedId = `00${num}`; // "002"
+              const num = parseInt(recipeId, 10); 
+              const singleDigitId = num.toString(); 
+              const doubleZeroPaddedId = `00${num}`; 
 
-              // Adicionar busca por formato de dígito único (e.g., "POO Receita 2")
               searchRegexps.push(new RegExp(`POO[\\s_]?Receita[\\s_]?${singleDigitId}(?!\\w)`, 'i'));
               searchRegexps.push(new RegExp(`Receita[\\s_]?${singleDigitId}(?!\\w)`, 'i'));
 
-              // Adicionar busca por formato com dois zeros (e.g., "POO Receita 002")
               searchRegexps.push(new RegExp(`POO[\\s_]?Receita[\\s_]?${doubleZeroPaddedId}(?!\\w)`, 'i'));
               searchRegexps.push(new RegExp(`Receita[\\s_]?${doubleZeroPaddedId}(?!\\w)`, 'i'));
           }
-          // Adicionar aqui mais `else if` para outros casos se necessário 
-          // (e.g. ids que são apenas "1" mas podem ser "01" ou "001" na descrição do Gist)
 
           foundGist = userGists.find(gist =>
             gist.description &&
@@ -215,10 +198,9 @@ export default function Home() {
           gistUrlForRecipe = foundGist.html_url;
         }
         
-        // Mantém os dados de `initialFolders` e apenas atualiza `gitRepoUrl`
         return { 
-            ...recipeFolder, // Usa nome, descrição, etc. de initialFolders
-            gitRepoUrl: gistUrlForRecipe || recipeFolder.gitRepoUrl || '' // Preenche se encontrado, senão mantém o que estava em initialFolders (que deve ser vazio para novos usuários)
+            ...recipeFolder, 
+            gitRepoUrl: gistUrlForRecipe || recipeFolder.gitRepoUrl || '' 
         };
       });
 
@@ -242,6 +224,11 @@ export default function Home() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    handleAutoFillGists();
   };
 
   if (!isClient) {
@@ -275,47 +262,51 @@ export default function Home() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0 space-y-3 sm:space-y-4">
-          <div>
-            <Label htmlFor="githubUser" className="block text-xs sm:text-sm font-medium text-card-foreground mb-1">
-              Nome de Usuário GitHub do Aluno
-            </Label>
-            <div className="flex items-stretch gap-2">
-              <Input
-                id="githubUser"
-                value={githubUsername}
-                onChange={(e) => setGithubUsername(e.target.value)}
-                placeholder="Digite o nome de usuário GitHub do aluno"
-                className="flex-grow bg-background text-foreground border-border placeholder:text-muted-foreground h-9 sm:h-10 text-sm sm:text-base"
-              />
+          <form onSubmit={handleFormSubmit}>
+            <div className="space-y-3 sm:space-y-4">
+              <div>
+                <Label htmlFor="githubUser" className="block text-xs sm:text-sm font-medium text-card-foreground mb-1">
+                  Nome de Usuário GitHub do Aluno
+                </Label>
+                <div className="flex items-stretch gap-2">
+                  <Input
+                    id="githubUser"
+                    value={githubUsername}
+                    onChange={(e) => setGithubUsername(e.target.value)}
+                    placeholder="Digite o nome de usuário GitHub do aluno"
+                    className="flex-grow bg-background text-foreground border-border placeholder:text-muted-foreground h-9 sm:h-10 text-sm sm:text-base"
+                  />
+                  <Button
+                    type="submit"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 sm:h-10 px-3 sm:px-4"
+                    size="default"
+                  >
+                    <Search className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="text-xs sm:text-sm">Buscar Gists</span>
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  O aluno deve nomear seus Gists seguindo o padrão: "POO Receita 01", "POO_Receita_004", "Receita 08a", "Mini-Projeto", etc.
+                </p>
+              </div>
               <Button
-                onClick={handleAutoFillGists}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 sm:h-10 px-3 sm:px-4"
+                onClick={handleSaveAllFoldersToJson}
+                variant="outline"
+                className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground h-9 sm:h-10"
                 size="default"
+                disabled={!folders.some(f => f.gitRepoUrl.trim() !== "")}
               >
-                <Search className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="text-xs sm:text-sm">Buscar Gists</span>
+                <Download className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">Salvar Gists do Aluno em JSON</span>
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1.5">
-              O aluno deve nomear seus Gists seguindo o padrão: "POO Receita 01", "POO_Receita_004", "Receita 08a", "Mini-Projeto", etc.
-            </p>
-          </div>
-          <Button
-            onClick={handleSaveAllFoldersToJson}
-            variant="outline"
-            className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground h-9 sm:h-10"
-            size="default"
-            disabled={!folders.some(f => f.gitRepoUrl.trim() !== "")}
-          >
-            <Download className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="text-xs sm:text-sm">Salvar Gists do Aluno em JSON</span>
-          </Button>
+          </form>
         </CardContent>
       </Card>
 
       <main className="w-full max-w-4xl">
         {folders.length > 0 ? (
-          <ScrollArea className="h-[calc(100vh-26rem)] sm:h-[calc(100vh-28rem)] pr-2 sm:pr-4">
+          <ScrollArea className="h-[calc(100vh-26rem)] sm:h-[calc(100vh-28rem)] pr-2 sm:pr-4"> {/* Ajuste a altura conforme necessário */}
             <div className="space-y-3 sm:space-y-4">
               {folders.map(folder => (
                 <GitIntegrationCard
@@ -338,5 +329,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
