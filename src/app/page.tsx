@@ -26,12 +26,12 @@ async function fetchAllUserGists(username: string): Promise<any[]> {
       if (response.status === 404) {
         throw new Error(`Usuário do GitHub "${username}" não encontrado.`);
       }
-      throw new Error(`Erro ao buscar Gists: ${response.status} ${response.statusText}`);
+      throw new Error(`Erro ao buscar Gists da API do GitHub: ${response.status} ${response.statusText}`);
     }
     
     const gistsOnPage = await response.json();
     if (!Array.isArray(gistsOnPage)) {
-         throw new Error("A resposta da API do GitHub não foi uma lista de Gists como esperado.");
+         throw new Error("A resposta da API do GitHub não foi uma lista de Gists como esperado. Verifique o console do navegador para mais detalhes.");
     }
     allGists = allGists.concat(gistsOnPage);
 
@@ -230,11 +230,13 @@ export default function Home() {
         description: `${gistsFoundCount} Gist(s) encontrados para ${githubUsername} e URLs preenchidas. As alterações foram salvas localmente no navegador.`,
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao buscar Gists:", error);
-      let errorMessage = "Ocorreu um erro ao buscar os Gists.";
+      let errorMessage = "Ocorreu um erro desconhecido ao buscar os Gists.";
       if (error instanceof Error) {
         errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
       }
       toast({
         title: "Erro na Busca de Gists",
@@ -339,3 +341,4 @@ export default function Home() {
   );
 }
 
+    
